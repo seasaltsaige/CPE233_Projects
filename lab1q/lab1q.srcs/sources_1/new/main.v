@@ -60,16 +60,9 @@ module exp_1q (
     
     wire reg_enabled;
     
-    
-//    always @ (posedge clk) begin
-//        if (display_sel == 0) begin
-//            assign led[15:11] = rom_count;
-//            assign led = {{rom_count}, {6'b0}, ram_count};
-//            assign led[4:0] = ram_count;
-//        end else begin
-//            led = {{}};
-//        end
-//    end
+//    assign led[15:11] = 
+    assign led [15:11] = display_sel == 1 ? rom_count : 5'b0;
+    assign led[4:0] = ram_count;
     
     clk_2n_div_test #(.n(25)) CLOCK_DIVIDER (
         .clockin   (clk), 
@@ -89,10 +82,10 @@ module exp_1q (
         
         .mealy_clr(clear),
         .mealy_clr_ram_ctr(clear_ram_cntr),
+        .mealy_up_rom(increment_rom),
+        .mealy_we(ram_write_enabled),
         
-        .moore_we(ram_write_enabled),
         .moore_disp_sel(display_sel),
-        .moore_up_rom(increment_rom),
         .moore_up_ram(increment_ram),
         .moore_start_prime(check_prime),
         .moore_enable_reg(reg_enabled)
@@ -133,7 +126,7 @@ module exp_1q (
         .start (check_prime),
         .test  (1'b0),
         .clk   (clk),
-        .num   (rom_mux_selected),
+        .num   (rom_mux_selected[9:0]),
         .DONE  (prime_check_done),
         .PRIME (is_prime)
     ); 

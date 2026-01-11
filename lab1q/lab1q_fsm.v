@@ -33,10 +33,10 @@ rco_ram,
 // mealy outputs
 mealy_clr,
 mealy_clr_ram_ctr,
+mealy_up_rom,
+mealy_we,
 // moore outputs
-moore_we,
 moore_disp_sel,
-moore_up_rom,
 moore_up_ram,
 moore_start_prime,
 moore_enable_reg); 
@@ -49,11 +49,11 @@ moore_enable_reg);
           rco_rom,
           rco_ram;
           
-    output reg moore_we, 
+    output reg mealy_we, 
                mealy_clr,
                mealy_clr_ram_ctr, 
-               moore_disp_sel, 
-               moore_up_rom, 
+               mealy_up_rom,  
+               moore_disp_sel,
                moore_up_ram, 
                moore_start_prime,
                moore_enable_reg;
@@ -79,11 +79,11 @@ moore_enable_reg);
     //- model the next-state and output decoders
     always @ (m_btn, prime, done, rco_rom, rco_ram, PS)
     begin
-       moore_we = 0;
+       mealy_we = 0;
        mealy_clr = 0;
        mealy_clr_ram_ctr = 0;
+       mealy_up_rom = 0;
        moore_disp_sel = 0;
-       moore_up_rom = 0;
        moore_up_ram = 0;
        moore_start_prime = 0;
        moore_enable_reg = 0;
@@ -97,13 +97,15 @@ moore_enable_reg);
              
              // if middle button is pressed while idle    
              if (m_btn == 1) begin
-                mealy_clr = 1;   
+                mealy_clr = 1;
+                mealy_clr_ram_ctr = 1;
                 // move to read rom state
                 NS = st_read_rom; 
              end
              // otherwise, stay idle
              else begin
                 mealy_clr = 0;
+                mealy_clr_ram_ctr = 0;
                 NS = st_idle; 
              end  
           end
@@ -111,7 +113,6 @@ moore_enable_reg);
           st_read_rom:
              begin
                 moore_disp_sel = 1;
-                moore_up_rom = 1;
                 moore_start_prime = 1;
                 NS = st_wait_prime;
              end   
@@ -119,34 +120,21 @@ moore_enable_reg);
           st_wait_prime:
              begin 
                  moore_disp_sel = 1;
-                 // if prime check has finished
-                 if (done == 1) begin
-                    // if finished and prime
-                    if (prime == 1) begin
-//                        mealy_we = 1;
-                        NS = st_write_ram;
-                    // if finished and no prime
-                    end else begin
-//                        mealy_we = 0;
-                        // if rom count overflow has occurred
-                        if (rco_rom == 1) begin
-                            // finished incrementing rom, goto biggest
-                            mealy_clr_ram_ctr = 1;
-                            NS = st_find_big;
-                            
-                        // no rom count overflow (done and not prime)
-                        end else begin
-                            NS = st_read_rom;
-                        end
-                    end
+                 if (done == 0) begin
+                    NS = st_wait_prime;
+                 end else if (prime == 1) begin
+                    mealy_we = 1;
+                    NS = st_write_ram;
+                 end else if (rco_rom == 1) begin
+                    mealy_clr_ram_ctr = 1;
+                    NS = st_find_big;
                  end else begin
-                    NS = st_wait_prime; 
-                 end  
+                    mealy_up_rom = 1;
+                    NS = st_read_rom;
+                 end 
              end
             st_write_ram:
               begin
-//                mealy_we = 0;
-                moore_we = 1;
                 moore_disp_sel = 1;
                 moore_up_ram = 1;
                 // if overflow is active after write
@@ -155,13 +143,14 @@ moore_enable_reg);
                     NS = st_find_big;
                 // if no rom cntr overflow
                 end else begin
+                    mealy_up_rom = 1; 
                     NS = st_read_rom;
                 end
               end
                 
             st_find_big:
               begin
-                moore_disp_sel = 1;
+                moore_disp_sel = 0;
                 moore_enable_reg = 1;
                 moore_up_ram = 1;
                 if (rco_ram == 1) begin

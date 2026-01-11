@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2025.2 (win64) Build 6299465 Fri Nov 14 19:35:11 GMT 2025
-| Date         : Sat Jan 10 21:01:52 2026
+| Date         : Sat Jan 10 23:58:00 2026
 | Host         : SaigesGamingPC running 64-bit major release  (build 9200)
 | Command      : report_control_sets -verbose -file exp_1q_control_sets_placed.rpt
 | Design       : exp_1q
@@ -58,11 +58,11 @@ Table of Contents
 +--------------+-----------------------+------------------------+-----------------+--------------+
 | Clock Enable | Synchronous Set/Reset | Asynchronous Set/Reset | Total Registers | Total Slices |
 +--------------+-----------------------+------------------------+-----------------+--------------+
-| No           | No                    | No                     |              53 |           16 |
+| No           | No                    | No                     |              53 |           18 |
 | No           | No                    | Yes                    |              10 |            3 |
 | No           | Yes                   | No                     |               0 |            0 |
-| Yes          | No                    | No                     |              14 |            5 |
-| Yes          | No                    | Yes                    |              10 |            4 |
+| Yes          | No                    | No                     |              14 |            7 |
+| Yes          | No                    | Yes                    |              10 |            3 |
 | Yes          | Yes                   | No                     |              21 |            6 |
 +--------------+-----------------------+------------------------+-----------------+--------------+
 
@@ -75,14 +75,14 @@ Table of Contents
 +--------------------------------+------------------------------------------+------------------------------------------+------------------+----------------+--------------+
 |  SEVEN_SEG/CLK_DIV/CLK         |                                          |                                          |                1 |              2 |         2.00 |
 |  count_reg[3]                  |                                          |                                          |                1 |              2 |         2.00 |
-|  CLOCK_DIVIDER/count_reg[25]_0 |                                          |                                          |                2 |              5 |         2.50 |
-|  CLOCK_DIVIDER/count_reg[25]_0 | nolabel_line80/E[0]                      | PRIME_CHECKER/AR[0]                      |                2 |              5 |         2.50 |
-|  CLOCK_DIVIDER/count_reg[25]_0 | nolabel_line80/check_prime               | nolabel_line80/AR[0]                     |                2 |              5 |         2.50 |
-|  CLOCK_DIVIDER/count_reg[25]_0 | nolabel_line80/ram_write_enabled         |                                          |                2 |              7 |         3.50 |
-|  CLOCK_DIVIDER/count_reg[25]_0 | PRIME_RAM/E[0]                           |                                          |                2 |              7 |         3.50 |
-|  count_reg[3]                  | nolabel_line80/FSM_onehot_PS_reg[1]_0[0] |                                          |                3 |              7 |         2.33 |
+|  CLOCK_DIVIDER/count_reg[25]_0 |                                          |                                          |                4 |              5 |         1.25 |
+|  CLOCK_DIVIDER/count_reg[25]_0 | nolabel_line73/E[0]                      | nolabel_line73/AR[0]                     |                1 |              5 |         5.00 |
+|  CLOCK_DIVIDER/count_reg[25]_0 | PRIME_CHECKER/E[0]                       | nolabel_line73/FSM_onehot_PS_reg[0]_0[0] |                2 |              5 |         2.50 |
+|  count_reg[3]                  | nolabel_line73/FSM_onehot_PS_reg[1]_0[0] |                                          |                3 |              7 |         2.33 |
+|  CLOCK_DIVIDER/count_reg[25]_0 | PRIME_RAM/E[0]                           |                                          |                4 |              7 |         1.75 |
+|  CLOCK_DIVIDER/count_reg[25]_0 | PRIME_CHECKER/FSM_onehot_PS_reg[2]       |                                          |                2 |              7 |         3.50 |
 |  count_reg[3]                  |                                          | PRIME_CHECKER/CLR                        |                3 |             10 |         3.33 |
-|  count_reg[3]                  | PRIME_CHECKER/UP                         | nolabel_line80/FSM_onehot_PS_reg[1]_0[0] |                3 |             10 |         3.33 |
+|  count_reg[3]                  | PRIME_CHECKER/UP                         | nolabel_line73/FSM_onehot_PS_reg[1]_0[0] |                3 |             10 |         3.33 |
 |  count_reg[3]                  | PRIME_CHECKER/LD3                        | PRIME_CHECKER/CLR                        |                3 |             11 |         3.67 |
 |  clk_IBUF_BUFG                 |                                          |                                          |               12 |             44 |         3.67 |
 +--------------------------------+------------------------------------------+------------------------------------------+------------------+----------------+--------------+
