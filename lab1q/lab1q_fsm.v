@@ -1,18 +1,17 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company:  Ratner Surf Designs
-// Engineer:  James Ratner
+// Company:  Cal Poly SLO
+// Engineer: Saige Sloan
 // 
-// Create Date: 07/07/2018 08:05:03 AM
-// Design Name: 
+// Create Date: 01/06/2026
+// Design Name: Experiment 1Q
 // Module Name: lab1q_fsm
-// Project Name: 
-// Target Devices: 
-// Tool  Versions: 
-// Description: Generic FSM model with both Mealy & Moore outputs. 
-//    Note: data widths of state variables are not specified 
+// Project Name: Lab 1
+// Target Devices: Basys3 (xc7a35tcpg236-1)
+// Tool  Versions: Vivado 2025.2
+// Description: FSM Module with 5 states, controlling the logic for Lab 1Q implementation. 
 //
-// Dependencies: 
+// Dependencies:
 // 
 // Revision:
 // Revision 1.00 - File Created (07-07-2018) 
@@ -43,9 +42,9 @@ module lab1q_fsm(
    output reg moore_start_prime,
    output reg moore_enable_reg
 );     
-   //- next state & present state variables
+   // Each state is 3 bits.
    reg [2:0] NS, PS; 
-   //- bit-level state representations
+   // 5 States are needed, so we will need a minimum of 3 bits, allowing for up to 8 states; leaving 3 unused states.
    parameter [2:0] st_idle=3'b000, 
                    st_read_rom=3'b001, 
                    st_wait_prime=3'b010, 
