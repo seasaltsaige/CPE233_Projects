@@ -35,6 +35,7 @@ module exp_1q (
     
     wire clear;
     wire clear_ram_cntr;
+    wire clear_rom_cntr;
     wire ram_write_enabled;
     
     wire increment_rom;
@@ -60,8 +61,7 @@ module exp_1q (
     
     wire reg_enabled;
     
-//    assign led[15:11] = 
-    assign led [15:11] = display_sel == 1 ? rom_count : 5'b0;
+    assign led [15:11] = rom_count;
     assign led[4:0] = ram_count;
     
     clk_2n_div_test #(.n(25)) CLOCK_DIVIDER (
@@ -85,6 +85,7 @@ module exp_1q (
         .mealy_up_rom(increment_rom),
         .mealy_we(ram_write_enabled),
         
+        .moore_clr_rom_ctr(clear_rom_cntr),
         .moore_disp_sel(display_sel),
         .moore_up_ram(increment_ram),
         .moore_start_prime(check_prime),
@@ -107,7 +108,7 @@ module exp_1q (
     
      cntr_up_clr_nb #(.n(5)) ROM_COUNTER (
          .clk   (slow_clock), 
-         .clr   (clear), 
+         .clr   (clear_rom_cntr), 
          .up    (increment_rom), 
          .ld    (1'b0), 
          .D     (5'b00000), 
@@ -170,7 +171,7 @@ module exp_1q (
     mux_2t1_nb  #(.n(7)) DISP_LEFT_SEG_MUX (
         .SEL   (display_sel), 
         .D0    (ram_data), 
-        .D1    ({{2'b0}, {rom_count}}), 
+        .D1    ({{3'b0}, {rom_count[3:0]}}), 
         .D_OUT (cnt_left)
     );
     

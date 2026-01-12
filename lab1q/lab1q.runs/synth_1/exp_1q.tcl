@@ -57,8 +57,6 @@ if {$::dispatch::connected} {
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
 set_param general.usePosixSpawnForFork 1
-set_param chipscope.maxJobs 3
-set_param xicom.use_bs_reader 1
 set_msg_config  -id {Common 17-180}  -string {{ERROR: [Common 17-180] Spawn failed: The operation completed successfully.}}  -suppress 
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a35tcpg236-1
@@ -70,14 +68,12 @@ set_property webtalk.parent_dir G:/projects/CPE233_Projects/lab1q/lab1q.cache/wt
 set_property parent.project_path G:/projects/CPE233_Projects/lab1q/lab1q.xpr [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
+set_property board_part_repo_paths {C:/Users/orion/AppData/Roaming/Xilinx/Vivado/2025.2/xhub/board_store/xilinx_board_store} [current_project]
+set_property board_part digilentinc.com:basys3:part0:1.2 [current_project]
 set_property ip_output_repo g:/projects/CPE233_Projects/lab1q/lab1q.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
-read_mem {
-  G:/projects/CPE233_Projects/MODULES/exp1q_romb.mem
-  G:/projects/CPE233_Projects/MODULES/exp1q_roma.mem
-}
 read_verilog -library xil_defaultlib {
   G:/projects/CPE233_Projects/MODULES/clk_2n_div_test_v1_01.v
   G:/projects/CPE233_Projects/MODULES/cntr_up_clr_nb_v1_03.v

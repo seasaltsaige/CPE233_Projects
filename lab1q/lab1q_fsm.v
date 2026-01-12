@@ -36,6 +36,7 @@ mealy_clr_ram_ctr,
 mealy_up_rom,
 mealy_we,
 // moore outputs
+moore_clr_rom_ctr,
 moore_disp_sel,
 moore_up_ram,
 moore_start_prime,
@@ -51,7 +52,8 @@ moore_enable_reg);
           
     output reg mealy_we, 
                mealy_clr,
-               mealy_clr_ram_ctr, 
+               mealy_clr_ram_ctr,
+               moore_clr_rom_ctr,
                mealy_up_rom,  
                moore_disp_sel,
                moore_up_ram, 
@@ -82,6 +84,7 @@ moore_enable_reg);
        mealy_we = 0;
        mealy_clr = 0;
        mealy_clr_ram_ctr = 0;
+       moore_clr_rom_ctr = 0;
        mealy_up_rom = 0;
        moore_disp_sel = 0;
        moore_up_ram = 0;
@@ -94,7 +97,7 @@ moore_enable_reg);
           begin
              // loop through ram to display
              moore_up_ram = 1;
-             
+             moore_clr_rom_ctr = 1;
              // if middle button is pressed while idle    
              if (m_btn == 1) begin
                 mealy_clr = 1;
@@ -104,8 +107,6 @@ moore_enable_reg);
              end
              // otherwise, stay idle
              else begin
-                mealy_clr = 0;
-                mealy_clr_ram_ctr = 0;
                 NS = st_idle; 
              end  
           end
@@ -151,6 +152,7 @@ moore_enable_reg);
             st_find_big:
               begin
                 moore_disp_sel = 0;
+                moore_clr_rom_ctr = 1;
                 moore_enable_reg = 1;
                 moore_up_ram = 1;
                 if (rco_ram == 1) begin
