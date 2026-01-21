@@ -39,7 +39,7 @@ module ram_single_port
      parameter m = 8) (
 	input wire [m-1:0] data_in,
 	input wire [n-1:0] addr,
-	input wire we, 
+	input wire we,
 	input wire clk,
 	output wire [m-1:0] data_out  );
 

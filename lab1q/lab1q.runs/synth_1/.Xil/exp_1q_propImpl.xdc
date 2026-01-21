@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:G:/projects/CPE233_Projects/MODULES/Basys3_Master_v1_03.xdc rfile:../../../../MODULES/Basys3_Master_v1_03.xdc id:1} [current_design]
+set_property SRC_FILE_INFO {cfile:D:/CPE233_Projects/MODULES/Basys3_Master_v1_03.xdc rfile:../../../../MODULES/Basys3_Master_v1_03.xdc id:1} [current_design]
 set_property src_info {type:XDC file:1 line:18 export:INPUT save:INPUT read:READ} [current_design]
 set_property PACKAGE_PIN W5 [get_ports clk]
 set_property src_info {type:XDC file:1 line:58 export:INPUT save:INPUT read:READ} [current_design]
