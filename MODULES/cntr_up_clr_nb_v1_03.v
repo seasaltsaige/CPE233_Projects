@@ -45,9 +45,9 @@ module cntr_up_clr_nb #(parameter n=8) (
     output wire rco   ); 
 
     
-    always @(posedge clr, posedge clk)
+    always @(posedge clk)
     begin 
-        if (clr == 1)       // asynch reset
+        if (clr == 1)       // SYNC reset
            count <= 0;
         else if (ld == 1)   // load new value
            count <= D; 

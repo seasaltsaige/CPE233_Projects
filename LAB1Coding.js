@@ -8,9 +8,16 @@ for (let i = 0; i < arr.length; i++) {
 
 // Loop through the array, look for locations with zeros still, 
 // replace them with 0xFFFF
+let numZeros = 0;
 for (let j = 0; j < arr.length; j++) {
-  if (arr[j] === 0) arr[j] = 0xFFFF;
+  if (arr[j] === 0) {
+    arr[j] = 0xFFFF;
+    // Count Zeros
+    numZeros++;
+  }
 }
 
 // Print values held in array
 console.log(arr);
+// Print number of zeros
+console.log(numZeros);

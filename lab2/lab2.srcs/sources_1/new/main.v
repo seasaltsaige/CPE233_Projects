@@ -24,6 +24,59 @@ module main(
         input clk
     );
     
+    wire PC_CLR;
+    wire PC_LD;
+
+    wire [1:0] PC_SEL;
+    wire [31:0] MUX_OUT;
+    wire [31:0] PC_ADDR;
+
+    wire [31:0] OTTER_MEM_OUT;
+    
+    mux_4t1_nb  #(.n(32)) PC_ADDR_SEL_MUX  (
+        .SEL   (PC_SEL), 
+        .D0    (PC_ADDR + 32'd4), 
+        .D1    (32'h00004444), 
+        .D2    (32'h00008888), 
+        .D3    (32'h0000CCCC),
+        .D_OUT (MUX_OUT) 
+    );  
+    
+    
+    cntr_up_clr_nb #(.n(32)) PROGRAM_COUNTER (
+        .clk   (clk), 
+        .clr   (PC_CLR), 
+        .up    (1'b0), 
+        .ld    (PC_LD), 
+        .D     (MUX_OUT), 
+        .count (PC_ADDR), 
+        .rco   ()
+    ); 
+    
+    
+    Memory OTTER_MEMORY (
+        .MEM_CLK (clk),
+        .MEM_RDEN1 (1'b1),
+        .MEM_RDEN2 (1'b0),
+        .MEM_WE2 (1'b0),
+        .MEM_ADDR1 (PC_ADDR[15:2]),
+        .MEM_ADDR2 (32'd0),
+        .MEM_DIN2 (32'd0),
+        .MEM_SIZE (2'b10),
+        .MEM_SIGN (1'b0),
+        .IO_IN (1'b0),
+        .IO_WR (),
+        .MEM_DOUT1 (OTTER_MEM_OUT),
+        .MEM_DOUT2 ()  
+    ); 
+    
+    reg_nb #(.n(16)) MY_REG (
+        .data_in  (xxxx), 
+        .ld       (xxxx), 
+        .clk      (xxxx), 
+        .clr      (xxxx), 
+        .data_out (xxxx)
+    );  
     
     
 endmodule
