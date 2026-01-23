@@ -1,6 +1,9 @@
 # Created by Saige Sloan
 # Cal Poly SLO
 # 01/22/2026
+# Subroutine which multiplies the values in x20 and x10, storing
+# the resultant in x31
+
 .text
 mult:
 init:
@@ -25,3 +28,5 @@ done:
     # Handle stack pops
     lw x20, 0(sp)
     addi sp, sp, 4
+
+    ret
