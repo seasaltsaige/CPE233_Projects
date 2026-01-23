@@ -24,7 +24,6 @@ module main(
         input clk,
         input PC_RESET,
         input PC_LD,
-        input INIT,
         input [1:0] PC_SEL
     );
     
