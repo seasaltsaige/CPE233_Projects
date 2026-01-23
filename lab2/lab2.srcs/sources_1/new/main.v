@@ -21,38 +21,34 @@
 
 
 module main(
-        input clk
+        input clk,
+        input PC_RESET,
+        input PC_LD,
+        input INIT,
+        input [1:0] PC_SEL
     );
     
-    wire PC_CLR;
-    wire PC_LD;
-
-    wire [1:0] PC_SEL;
-    wire [31:0] MUX_OUT;
+    wire [31:0] ADDR_MUX_OUT;
     wire [31:0] PC_ADDR;
-
     wire [31:0] OTTER_MEM_OUT;
     
-    mux_4t1_nb  #(.n(32)) PC_ADDR_SEL_MUX  (
+    mux_4t1_nb  #(.n(32)) PROG_CTR_MUX  (
         .SEL   (PC_SEL), 
         .D0    (PC_ADDR + 32'd4), 
         .D1    (32'h00004444), 
         .D2    (32'h00008888), 
         .D3    (32'h0000CCCC),
-        .D_OUT (MUX_OUT) 
-    );  
+        .D_OUT (ADDR_MUX_OUT) 
+    );
     
     
-    cntr_up_clr_nb #(.n(32)) PROGRAM_COUNTER (
-        .clk   (clk), 
-        .clr   (PC_CLR), 
-        .up    (1'b0), 
-        .ld    (PC_LD), 
-        .D     (MUX_OUT), 
-        .count (PC_ADDR), 
-        .rco   ()
+    reg_nb #(.n(32)) PROGRAM_CTR_REG (
+        .data_in  (ADDR_MUX_OUT), 
+        .ld       (PC_LD), 
+        .clk      (clk), 
+        .clr      (PC_RESET), 
+        .data_out (PC_ADDR)
     ); 
-    
     
     Memory OTTER_MEMORY (
         .MEM_CLK (clk),
@@ -68,15 +64,6 @@ module main(
         .IO_WR (),
         .MEM_DOUT1 (OTTER_MEM_OUT),
         .MEM_DOUT2 ()  
-    ); 
-    
-    reg_nb #(.n(16)) MY_REG (
-        .data_in  (xxxx), 
-        .ld       (xxxx), 
-        .clk      (xxxx), 
-        .clr      (xxxx), 
-        .data_out (xxxx)
-    );  
-    
+    );
     
 endmodule

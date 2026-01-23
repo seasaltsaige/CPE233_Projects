@@ -44,9 +44,9 @@ module reg_nb #(parameter n=8) (
     output reg [n-1:0] data_out  ); 
 
     
-    always @(posedge clr, posedge clk)
+    always @(posedge clk)
     begin 
-       if (clr == 1)       // asynch clr
+       if (clr == 1)       // sync clr
           data_out <= 0;
        else if (ld == 1)   // synch load
           data_out <= data_in; 
