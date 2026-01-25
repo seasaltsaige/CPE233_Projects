@@ -8,8 +8,9 @@
 mult:
 init:
     # Handle stack pushes
-    addi sp, sp, -4  
-    sw  x20, 0(sp)
+    addi sp, sp, -8
+    sw ra, 0(sp)  
+    sw x20, 4(sp)
 
     # temp load values for multiplication
     # li x20, 23
@@ -26,7 +27,8 @@ main:
 
 done: 
     # Handle stack pops
-    lw x20, 0(sp)
-    addi sp, sp, 4
+    lw ra, 0(sp)
+    lw x20, 4(sp)
+    addi sp, sp, 8
 
     ret
