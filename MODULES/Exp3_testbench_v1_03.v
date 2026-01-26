@@ -38,8 +38,7 @@ riscv_alu  my_alu (
     .result   (result)
     );
    
-   initial 
-   begin
+   always begin
    
       alu_fun = 0;     // addition
       srcA = 32'd25; 
@@ -109,7 +108,11 @@ riscv_alu  my_alu (
       alu_fun = 14; 
       srcA = 32'h0000FF00; 
       srcB = 32'h00000FFF;  	  
-     
+   
+   
+      #20 $finish;
    end  
+
+    
 
 endmodule

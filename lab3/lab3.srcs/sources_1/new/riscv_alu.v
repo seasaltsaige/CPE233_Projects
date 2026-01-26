@@ -52,38 +52,50 @@ module riscv_alu(
             end
             
             alu_or: begin
-            
+                result <= srcA | srcB;
             end
             
             alu_and: begin
-            
+                result <= srcA & srcB;
             end
             
             alu_xor: begin
-            
+                result <= srcA ^ srcB;
             end
             
             alu_srl: begin
-            
+                result <= srcA >> srcB[4:0];
             end
             
             alu_sll: begin
-            
+                result <= srcA << srcB[4:0];
             end
             
             alu_sra: begin
-            
+                result <= $signed(srcA) >>> srcB[4:0];
             end
         
             alu_slt: begin
-            
+                if ($signed(srcA) < $signed(srcB)) begin
+                    result <= 32'd1;
+                end else begin 
+                    result <= 32'd0;
+                end
             end
             
             alu_sltu: begin
-            
+                if (srcA < srcB) begin
+                    result <= 32'd1;
+                end else begin
+                    result <= 32'd0;
+                end
             end
             
             alu_lui: begin
+                result <= srcA;
+            end
+            
+            default: begin
             
             end
         
