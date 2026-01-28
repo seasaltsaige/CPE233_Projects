@@ -96,7 +96,7 @@ module riscv_alu(
             end
             
             default: begin
-            
+                result <= 32'hDEADBEEF;
             end
         
         endcase
