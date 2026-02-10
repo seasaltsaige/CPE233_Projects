@@ -136,8 +136,7 @@ module CU_FSM(
                     
 					BRANCH: 
                   begin
-                     // TODO: Branch for lab6
-                     // memWE2 = 1'b1;
+                     PC_WE = 1'b1;
                      NS = st_FET;
                   end
 					
@@ -148,17 +147,18 @@ module CU_FSM(
 					      NS = st_FET;
 					   end
 					  
-					OP_IMM:  // addi 
+					OP_IMM: 
 					   begin 
+                     // addi 
                      PC_WE = 1'b1;
                      RF_WE = 1'b1;
                      memRDEN2 = 0;
 					      NS = st_FET;
 					   end
 
-					OP_RG3: // Add
+					OP_RG3: 
                   begin
-                     
+                     // Add
                      PC_WE = 1'b1;
                      RF_WE = 1'b1;
                      memRDEN2 = 0;
