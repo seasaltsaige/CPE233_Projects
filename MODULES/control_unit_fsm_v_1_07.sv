@@ -115,47 +115,70 @@ module CU_FSM(
                      // load needs 3 clock cycles, PC_WE happens in writeback
                      // dont remember WHY though
                      PC_WE = 1'b0;
+                     memRDEN2 = 1'b1;
                      NS = st_WB;
                   end
 
                AUIPC:
                   begin
+                     PC_WE = 1'b1;
+                     RF_WE = 1'b1;
+                     memRDEN2 = 1'b0;
                      NS = st_FET;
                   end
 
 					STORE: 
                   begin
+                     PC_WE = 1'b1;
+                     memWE2 = 1'b1;
                      NS = st_FET;
                   end
                     
 					BRANCH: 
                   begin
-                     memWE2 = 1'b1; // write to memory for store?
+                     // TODO: Branch for lab6
+                     // memWE2 = 1'b1;
                      NS = st_FET;
                   end
 					
 					LUI: 
-					   begin				      
+					   begin
+                     PC_WE = 1'b1;
+                     RF_WE = 1'b1;			      
 					      NS = st_FET;
 					   end
 					  
 					OP_IMM:  // addi 
 					   begin 
+                     PC_WE = 1'b1;
+                     RF_WE = 1'b1;
+                     memRDEN2 = 0;
 					      NS = st_FET;
 					   end
 
-					OP_RG3:
+					OP_RG3: // Add
                   begin
+                     
+                     PC_WE = 1'b1;
+                     RF_WE = 1'b1;
+                     memRDEN2 = 0;
                      NS = st_FET;
                   end
 	            JAL: 
 					   begin
 					      PC_WE = 1'b1;
+                     RF_WE = 1'b1;
+                     memWE2 = 1'b0;
+                     memRDEN2 = 1'b0;
 					      NS = st_FET;
 					   end
 					   
 					JALR:
                   begin
+                     PC_WE = 1'b1;
+                     RF_SEL = 1'b1;
+                     memWE2 = 1'b0;
+                     memRDEN2 = 1'b0;
                      NS = st_FET;
                   end
                        

@@ -95,31 +95,76 @@ module CU_DCDR(
       case(OPCODE)
          LUI:
          begin
-            ALU_FUN = 4'b0000; 
-            srcA_SEL = 1'b0; 
-            RF_SEL = 2'b00; 
+            ALU_FUN = 4'b1001; 
+            srcA_SEL = 1'b1;
+            RF_SEL = 2'b11; 
          end
-			
+
+			AUIPC: begin
+            srcA_SEL = 1'b1;
+            srcB_SEL = 2'b11;
+            ALU_FUN = 4'b0000;
+            RF_SEL = 2'b11;
+         end
+
          JAL:
          begin
-				RF_SEL = 2'b00; 
+				PC_SEL = 2'b11;
+            RF_SEL = 2'b00;
 			end
-			
+
+			JALR: begin
+            // srcA_SEL = 1'b0;
+            // srcB_SEL = 2'b01;
+            PC_SEL = 2'b01;
+            RF_SEL = 2'b00;
+         end
+
+         // BRANCH: begin
+         //    // TODO: Lab6, implement branch instructions
+         //    case(FUNC3) 
+         //       BEQ: begin
+
+         //       end
+
+         //       BNE: begin
+
+         //       end
+
+         //       BLT: begin
+
+         //       end
+
+         //       BGE: begin
+
+         //       end
+
+         //       BLTU: begin
+
+         //       end
+
+         //       BGEU: begin
+
+         //       end
+         //    endcase
+         // end
+
          LOAD: 
          begin
             ALU_FUN = 4'b0000; 
             srcA_SEL = 1'b0; 
-            srcB_SEL = 2'b00; 
-            RF_SEL = 2'b00; 
+            srcB_SEL = 2'b01; 
+            RF_SEL = 2'b10;
          end
 			
          STORE:
          begin
             ALU_FUN = 4'b0000; 
             srcA_SEL = 1'b0; 
-            srcB_SEL = 2'b00; 
+            srcB_SEL = 2'b10;
          end
-			
+
+
          OP_IMM:
          begin
             case(FUNC3)
@@ -127,8 +172,8 @@ module CU_DCDR(
                begin
                   ALU_FUN = 4'b0000;
                   srcA_SEL = 1'b0; 
-                  srcB_SEL = 2'b00;
-                  RF_SEL = 2'b00; 
+                  srcB_SEL = 2'b01;
+                  RF_SEL = 2'b11; 
                end
 					
                default: 
@@ -140,6 +185,16 @@ module CU_DCDR(
                   RF_SEL = 2'b00; 
                end
             endcase
+         end
+
+         OP_RG3: begin
+            // Temporarily only using ADD for LAB5
+            // TODO: LAB6, implement other instruction types, same for OP_IMM
+            ALU_FUN = 4'b0000;
+            srcA_SEL = 1'b0;
+            srcB_SEL = 2'b00;
+            PC_SEL = 0;
+            RF_SEL = 2'b11;
          end
 
          default:
