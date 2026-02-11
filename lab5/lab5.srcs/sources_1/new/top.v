@@ -174,7 +174,7 @@ module OTTER_MCU(
         .D_OUT(alu_srcB)
     );
         
-    riscv_alu(
+    riscv_alu ALU(
         .alu_fun(alu_fun),
         .srcA(alu_srcA),
         .srcB(alu_srcB),
