@@ -112,8 +112,6 @@ module CU_FSM(
 				case (OPCODE)
 				   LOAD: 
                   begin
-                     // load needs 3 clock cycles, PC_WE happens in writeback
-                     // dont remember WHY though
                      PC_WE = 1'b0;
                      memRDEN2 = 1'b1;
                      NS = st_WB;
@@ -176,7 +174,7 @@ module CU_FSM(
 					JALR:
                   begin
                      PC_WE = 1'b1;
-                     RF_SEL = 1'b1;
+                     RF_WE = 1'b1;
                      memWE2 = 1'b0;
                      memRDEN2 = 1'b0;
                      NS = st_FET;
