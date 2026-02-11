@@ -1,14 +1,14 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
+// Company: Cal Poly SLO
+// Engineer: Saige Sloan
 // 
 // Create Date: 02/05/2026 07:25:05 PM
 // Design Name: 
 // Module Name: OTTER_MCU
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
+// Project Name: OTTER_MCU
+// Target Devices: Basys3 (xc7a35tcpg236-1)
+// Tool Versions: Vivado 2025.2
 // Description: 
 // 
 // Dependencies: 
@@ -109,7 +109,7 @@ module OTTER_MCU(
         .jalr(jalr)
     );
 
-    immed_gen(
+    immed_gen IMMED_GEN(
         .ir(DOUT1),
         .j_type(j_type),
         .b_type(b_type),
