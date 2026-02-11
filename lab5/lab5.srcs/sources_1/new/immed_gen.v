@@ -1,14 +1,14 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
+// Company: Cal Poly SLO
+// Engineer: Saige Sloan
 // 
 // Create Date: 01/30/2026 06:17:01 PM
-// Design Name: 
+// Design Name: Immediate Generator
 // Module Name: immed_gen
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
+// Project Name: Generators
+// Target Devices: Basys3 (xc7a35tcpg236-1)
+// Tool Versions: Vivado 2025.2
 // Description: 
 // 
 // Dependencies: 
@@ -30,6 +30,7 @@ module immed_gen(
     );
     
     always @(*) begin
+        //
         i_type <= { {21{ir[31]}}, ir[30:25], ir[24:20] };
     
         s_type <= { {21{ir[31]}}, ir[30:25], ir[11:7] };

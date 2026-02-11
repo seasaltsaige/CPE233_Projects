@@ -36,7 +36,6 @@ module OTTER_MCU(
     wire [31:0] PC_ADDR;
    
     wire [31:0] ADDR_MUX_OUT;
-    //wire [1:0] PC_SEL; 
    
     wire [31:0] DOUT1;
     wire [31:0] DOUT2;
@@ -94,7 +93,6 @@ module OTTER_MCU(
         .clk(clk),
         .PC_RESET(reset),         // Reset signal used to set PC to 32'h0 address
         .PC_LD(PC_WE),          // Load signal used to load next "MUX'd" address value 
-//        .PC_SEL(PC_SEL),        // MUX Select signal used to select which address input to input to the PC reg
         .ADDR_MUX_OUT(ADDR_MUX_OUT),
         .PC_ADDR(PC_ADDR) 
     );
@@ -160,7 +158,7 @@ module OTTER_MCU(
     );
     
     
-    mux_2t1_nb  #(.n(4)) ALU_SRC_A_MUX (
+    mux_2t1_nb  #(.n(32)) ALU_SRC_A_MUX (
         .SEL(alu_srcA_SEL), 
         .D0(rs1), 
         .D1(u_type), 
