@@ -82,9 +82,9 @@ module CU_DCDR(
         BLTU = 3'b110,
         BGEU = 3'b111
    } func3_t;    
-   func3_t FUNC3; //- define variable of new opcode type
+   func3_t FUNC3; 
     
-   assign FUNC3 = func3_t'(func3); //- Cast input enum 
+   assign FUNC3 = func3_t'(func3); 
        
    always_comb
    begin 
