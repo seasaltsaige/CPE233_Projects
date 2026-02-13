@@ -2,16 +2,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Company:  Ratner Surf Designs
 // Engineer: James Ratner
-// 
+//
 // Create Date: 01/07/2020 09:12:54 PM
-// Design Name: 
+// Design Name:
 // Module Name: top_level
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
+// Project Name:
+// Target Devices:
+// Tool Versions:
 // Description: Control Unit Template/Starter File for RISC-V OTTER
 //
-//     //- instantiation template 
+//     //- instantiation template
 //     CU_FSM my_fsm(
 //        .intr     (xxxx),
 //        .clk      (xxxx),
@@ -23,9 +23,9 @@
 //        .memRDEN1 (xxxx),
 //        .memRDEN2 (xxxx),
 //        .reset    (xxxx)   );
-//   
-// Dependencies: 
-// 
+//
+// Dependencies:
+//
 // Revision  History:
 // Revision 1.00 - File Created - 02-01-2020 (from other people's files)
 //          1.01 - (02-08-2020) switched states to enum type
@@ -36,8 +36,8 @@
 //          1.04 - (04-29-2020) removed typos to allow synthesis
 //          1.05 - (10-14-2020) fixed instantiation comment (thanks AF)
 //          1.06 - (12-10-2020) cleared most outputs, added commentes
-//          1.07 - (12-27-2023) changed signal names 
-// 
+//          1.07 - (12-27-2023) changed signal names
+//
 //////////////////////////////////////////////////////////////////////////////////
 
 module CU_FSM(
@@ -53,13 +53,16 @@ module CU_FSM(
     output logic reset
   );
     
-    typedef  enum logic [1:0] {
-       st_INIT,
-	   st_FET,
-       st_EX,
-       st_WB
-    }  state_type; 
-    state_type  NS,PS; 
+
+   
+
+   typedef  enum logic [1:0] {
+     st_INIT,
+	  st_FET,
+     st_EX,
+     st_WB
+   } state_type;
+   state_type  NS, PS;
       
     //- datatypes for RISC-V opcode types
     typedef enum logic [6:0] {

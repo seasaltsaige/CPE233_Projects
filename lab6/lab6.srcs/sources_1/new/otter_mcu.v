@@ -80,7 +80,10 @@ module OTTER_MCU(
     wire memRDEN2;
     
     // Branch Generator stuff
-    
+    wire br_eq;
+    wire br_lt;
+    wire br_ltu;
+
     // Main program counter MUX for the address input
     mux_4t1_nb  #(.n(32)) PROG_CTR_MUX  (
         .SEL(PC_SEL), 
@@ -184,9 +187,12 @@ module OTTER_MCU(
     );
     
     // Control modules
-    
     BRANCH_COND_GEN branch_cond_gen(
-
+        .rs1(rs1),
+        .rs2(rs2),
+        .br_eq(br_eq),
+        .br_lt(br_lt),
+        .br_ltu(br_ltu)
     );
     
     CU_DCDR cu_dcdr(

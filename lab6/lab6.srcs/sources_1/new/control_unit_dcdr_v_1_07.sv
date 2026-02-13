@@ -114,40 +114,65 @@ module CU_DCDR(
 			end
 
 			JALR: begin
-            // srcA_SEL = 1'b0;
-            // srcB_SEL = 2'b01;
             PC_SEL = 2'b01;
             RF_SEL = 2'b00;
          end
 
-         // BRANCH: begin
-         //    // TODO: Lab6, implement branch instructions
-         //    case(FUNC3) 
-         //       BEQ: begin
+         BRANCH: begin
+            case(FUNC3)  
+               BEQ: begin
+                  if (br_eq) begin
+                     PC_SEL = 2'b10;
+                  end else begin
+                     PC_SEL = 2'b00;
+                  end
+               end
 
-         //       end
+               BNE: begin
+                  if (!br_eq) begin
+                     PC_SEL = 2'b10;
+                  end else begin
+                     PC_SEL = 2'b00;
+                  end
+               end
 
-         //       BNE: begin
+               BLT: begin
+                  if (br_lt) begin
+                     PC_SEL = 2'b10;
+                  end else begin
+                     PC_SEL = 2'b00;
+                  end
+               end
 
-         //       end
+               BGE: begin
+                  if (!br_lt) begin
+                     PC_SEL = 2'b10;
+                  end else begin
+                     PC_SEL = 2'b00;
+                  end
+               end
 
-         //       BLT: begin
+               BLTU: begin
+                  if (br_ltu) begin
+                     PC_SEL = 2'b10;
+                  end else begin
+                     PC_SEL = 2'b00;
+                  end
+               end
 
-         //       end
+               BGEU: begin
+                  if (!br_ltu) begin
+                     PC_SEL = 2'b10;
+                  end else begin
+                     PC_SEL = 2'b00;
+                  end
+               end
 
-         //       BGE: begin
-
-         //       end
-
-         //       BLTU: begin
-
-         //       end
-
-         //       BGEU: begin
-
-         //       end
-         //    endcase
-         // end
+               default: begin
+                  PC_SEL = 2'b00;
+               end
+            endcase
+         end
 
          LOAD: 
          begin
@@ -156,7 +181,7 @@ module CU_DCDR(
             srcB_SEL = 2'b01; 
             RF_SEL = 2'b10;
          end
-			
+
          STORE:
          begin
             ALU_FUN = 4'b0000; 
@@ -199,11 +224,11 @@ module CU_DCDR(
 
          default:
          begin
-             PC_SEL = 2'b00; 
-             srcB_SEL = 2'b00; 
-             RF_SEL = 2'b00; 
-             srcA_SEL = 1'b0; 
-             ALU_FUN = 4'b0000;
+            PC_SEL = 2'b00; 
+            srcB_SEL = 2'b00; 
+            RF_SEL = 2'b00; 
+            srcA_SEL = 1'b0; 
+            ALU_FUN = 4'b0000;
          end
       endcase
    end
