@@ -23,13 +23,13 @@
 module BRANCH_COND_GEN(
         input [31:0] rs1,
         input [31:0] rs2,
-        output br_eq,
-        output br_lt,
-        output br_ltu
+        output reg br_eq,
+        output reg br_lt,
+        output reg br_ltu
     );
     
     always @(*) begin
-        br_eq = rs1 == rs2;
+        br_eq = $signed(rs1) == $signed(rs2);
         br_lt = $signed(rs1) < $signed(rs2);
         br_ltu = rs1 < rs2;
     end

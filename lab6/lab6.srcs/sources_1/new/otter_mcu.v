@@ -196,9 +196,9 @@ module OTTER_MCU(
     );
     
     CU_DCDR cu_dcdr(
-        .br_eq(1'd0), 
-        .br_lt(1'd0), 
-        .br_ltu(1'd0),
+        .br_eq(br_eq), 
+        .br_lt(br_lt), 
+        .br_ltu(br_ltu),
         .opcode(DOUT1[6:0]),    
         .func7(DOUT1[30]),    
         .func3(DOUT1[14:12]),    

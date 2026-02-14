@@ -83,7 +83,7 @@ module CU_DCDR(
         BGEU = 3'b111
    } func3_t;    
    func3_t FUNC3; 
-    
+
    assign FUNC3 = func3_t'(func3); 
        
    always_comb
@@ -192,19 +192,48 @@ module CU_DCDR(
 
          OP_IMM:
          begin
+            srcA_SEL = 1'b0; 
+            srcB_SEL = 2'b01;
+            RF_SEL = 2'b11; 
+            
             case(FUNC3)
-               3'b000: // instr: ADDI
-               begin
+               3'b000: begin // ADDI
                   ALU_FUN = 4'b0000;
-                  srcA_SEL = 1'b0; 
-                  srcB_SEL = 2'b01;
-                  RF_SEL = 2'b11; 
+               end
+               3'b010: begin // SLTI
+                  ALU_FUN = 4'b0010; // slt
+               end
+               3'b011: begin // SLTIU
+                  ALU_FUN = 4'b0011; // sltu
+               end
+               3'b110: begin // ORI
+                  ALU_FUN = 4'b0110; // or
+               end
+               3'b100: begin // XORI
+                  ALU_FUN = 4'b0100; // xor
+               end
+               3'b111: begin // ANDI
+                  ALU_FUN = 4'b0111; // and
+               end
+               3'b001: begin // SLLI
+                  ALU_FUN = 4'b0001; // sll
+               end
+               3'b101: begin
+                  case(func7)
+                     1'b0: begin // SRLI
+                        ALU_FUN = 4'b0101; // srl
+                     end
+                     1'b1: begin // SRAI
+                        ALU_FUN = 4'b1101; // sra
+                     end
+                  endcase
+
                end
 					
                default: 
                begin
                   PC_SEL = 2'b00; 
-                  ALU_FUN = 4'b0000;
+                  ALU_FUN = 4'b1111;
                   srcA_SEL = 1'b0; 
                   srcB_SEL = 2'b00; 
                   RF_SEL = 2'b00; 
@@ -213,13 +242,64 @@ module CU_DCDR(
          end
 
          OP_RG3: begin
-            // Temporarily only using ADD for LAB5
-            // TODO: LAB6, implement other instruction types, same for OP_IMM
-            ALU_FUN = 4'b0000;
             srcA_SEL = 1'b0;
             srcB_SEL = 2'b00;
-            PC_SEL = 0;
             RF_SEL = 2'b11;
+
+            case (FUNC3)
+               3'b000: begin // ADD + SUB
+                  case (func7)
+                     1'b0: begin // ADD
+                        ALU_FUN = 4'b0000;
+                     end
+                     1'b1: begin // SUB
+                        ALU_FUN = 4'b1000;
+                     end
+                  endcase
+               end
+
+               3'b001: begin // SLL
+                  ALU_FUN = 4'b0001;
+               end
+
+               3'b010: begin // SLT
+                  ALU_FUN = 4'b0010;
+               end
+
+               3'b011: begin // SLTU
+                  ALU_FUN = 4'b0011;
+               end
+
+               3'b100: begin // XOR
+                  ALU_FUN = 4'b0100;
+               end
+
+               3'b101: begin // SRL + SRA
+                 case (func7) 
+                     1'b0: begin // SRL
+                        ALU_FUN = 4'b0101;
+                     end
+                     1'b1: begin // SRA
+                        ALU_FUN = 4'b1101;
+                     end
+                  endcase
+               end
+
+               3'b110: begin // OR
+                  ALU_FUN = 4'b0110;
+               end
+
+               3'b111: begin // AND
+                  ALU_FUN = 4'b0111;
+               end
+
+               default: begin
+                  srcA_SEL = 1'b0;
+                  srcB_SEL = 2'b00;
+                  RF_SEL = 2'b00;
+                  ALU_FUN = 4'b1111; // DEADBEEF
+               end
+            endcase
          end
 
          default:
