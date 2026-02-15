@@ -43,272 +43,267 @@
 // 
 ///////////////////////////////////////////////////////////////////////////
 
+`include "riscv_instruction_types.svh"
+
 module CU_DCDR(
-   input br_eq, 
-   input br_lt, 
-   input br_ltu,
-   input [6:0] opcode,   //-  ir[6:0]
-   input func7,          //-  ir[30]
-   input [2:0] func3,    //-  ir[14:12] 
-   output logic [3:0] ALU_FUN,
-   output logic [1:0] PC_SEL,
-   output logic srcA_SEL,
-   output logic [1:0] srcB_SEL, 
-	output logic [1:0] RF_SEL   );
-    
-   //- datatypes for RISC-V opcode types
-   typedef enum logic [6:0] {
-        LUI    = 7'b0110111,
-        AUIPC  = 7'b0010111,
-        JAL    = 7'b1101111,
-        JALR   = 7'b1100111,
-        BRANCH = 7'b1100011,
-        LOAD   = 7'b0000011,
-        STORE  = 7'b0100011,
-        OP_IMM = 7'b0010011,
-        OP_RG3 = 7'b0110011
-   } opcode_t;
-   opcode_t OPCODE; //- define variable of new opcode type
-    
-   assign OPCODE = opcode_t'(opcode); //- Cast input enum 
+    input br_eq, 
+    input br_lt, 
+    input br_ltu,
+    input [6:0] opcode,   //-  ir[6:0]
+    input func7,          //-  ir[30]
+    input [2:0] func3,    //-  ir[14:12] 
+    output logic [3:0] ALU_FUN,
+    output logic [1:0] PC_SEL,
+    output logic srcA_SEL,
+    output logic [1:0] srcB_SEL, 
+    output logic [1:0] RF_SEL
+	);
 
-   //- datatype for func3Symbols tied to values
-   typedef enum logic [2:0] {
-        //BRANCH labels
-        BEQ = 3'b000,
-        BNE = 3'b001,
-        BLT = 3'b100,
-        BGE = 3'b101,
-        BLTU = 3'b110,
-        BGEU = 3'b111
-   } func3_t;    
-   func3_t FUNC3; 
+   // Cast opcode to opcode_t enum type   
+   opcode_t OPCODE; 
+   assign OPCODE = opcode_t'(opcode);  
 
-   assign FUNC3 = func3_t'(func3); 
+   // Cast input func3/func7 to enum types
+   // for different opcodes
+   branch_f3_t BRANCH_F3;
+   assign BRANCH_F3 = branch_f3_t'(func3);
+   
+   immed_f3_t IMMED_F3;
+   assign IMMED_F3 = immed_f3_t'(func3);
+   
+   reg_f3_t REG_F3;
+   assign REG_F3 = reg_f3_t'(func3);
+
+   immed_f7_t IMMED_F7;
+   assign IMMED_F7 = immed_f7_t'(func7);
+   
+   reg_add_sub_f7_t REG_AS_F7;
+   assign REG_AS_F7 = reg_add_sub_f7_t'(func7);
+    
+   reg_r_shft_f7_t REG_RSHFT_F7;
+   assign REG_RSHFT_F7 = reg_r_shft_f7_t'(func7);
        
    always_comb
    begin 
       //- schedule all values to avoid latch
-        PC_SEL = 2'b00;  srcB_SEL = 2'b00;     RF_SEL = 2'b00; 
-      srcA_SEL = 1'b0;   ALU_FUN  = 4'b0000;
+      PC_SEL   = PC_SEL_PC;
+      srcA_SEL = RS1;
+      srcB_SEL = RS2;
+      RF_SEL   = PC4;
+      ALU_FUN  = ALU_ADD;
 		
       case(OPCODE)
-         LUI:
-         begin
-            ALU_FUN = 4'b1001; 
-            srcA_SEL = 1'b1;
-            RF_SEL = 2'b11; 
+         LUI: begin
+            ALU_FUN = ALU_LUI; 
+            srcA_SEL = UTYPE;
+            RF_SEL = ALU_RES; 
          end
 
-			AUIPC: begin
-            srcA_SEL = 1'b1;
-            srcB_SEL = 2'b11;
-            ALU_FUN = 4'b0000;
-            RF_SEL = 2'b11;
+		 AUIPC: begin
+            srcA_SEL = UTYPE;
+            srcB_SEL = ALU_PC;
+            ALU_FUN = ALU_ADD;
+            RF_SEL = ALU_RES;
          end
 
-         JAL:
-         begin
-				PC_SEL = 2'b11;
-            RF_SEL = 2'b00;
-			end
+         JAL: begin
+			PC_SEL = PC_SEL_JAL;
+            RF_SEL = PC4;
+		end
 
-			JALR: begin
-            PC_SEL = 2'b01;
-            RF_SEL = 2'b00;
+		 JALR: begin
+            PC_SEL = PC_SEL_JALR;
+            RF_SEL = PC4;
          end
 
          BRANCH: begin
-            case(FUNC3)  
+            case(BRANCH_F3)  
                BEQ: begin
                   if (br_eq) begin
-                     PC_SEL = 2'b10;
+                     PC_SEL = PC_SEL_BRANCH;
                   end else begin
-                     PC_SEL = 2'b00;
+                     PC_SEL = PC_SEL_PC;
                   end
                end
 
                BNE: begin
                   if (!br_eq) begin
-                     PC_SEL = 2'b10;
+                     PC_SEL = PC_SEL_BRANCH;;
                   end else begin
-                     PC_SEL = 2'b00;
+                     PC_SEL = PC_SEL_PC;
                   end
                end
 
                BLT: begin
                   if (br_lt) begin
-                     PC_SEL = 2'b10;
+                     PC_SEL = PC_SEL_BRANCH;
                   end else begin
-                     PC_SEL = 2'b00;
+                     PC_SEL = PC_SEL_PC;
                   end
                end
 
                BGE: begin
                   if (!br_lt) begin
-                     PC_SEL = 2'b10;
+                     PC_SEL = PC_SEL_BRANCH;
                   end else begin
-                     PC_SEL = 2'b00;
+                     PC_SEL = PC_SEL_PC;
                   end
                end
 
                BLTU: begin
                   if (br_ltu) begin
-                     PC_SEL = 2'b10;
+                     PC_SEL = PC_SEL_BRANCH;
                   end else begin
-                     PC_SEL = 2'b00;
+                     PC_SEL = PC_SEL_PC;
                   end
                end
 
                BGEU: begin
                   if (!br_ltu) begin
-                     PC_SEL = 2'b10;
+                     PC_SEL = PC_SEL_BRANCH;
                   end else begin
-                     PC_SEL = 2'b00;
+                     PC_SEL = PC_SEL_PC;
                   end
                end
 
                default: begin
-                  PC_SEL = 2'b00;
+                  PC_SEL = PC_SEL_PC;
                end
             endcase
          end
 
-         LOAD: 
-         begin
-            ALU_FUN = 4'b0000; 
-            srcA_SEL = 1'b0; 
-            srcB_SEL = 2'b01; 
-            RF_SEL = 2'b10;
+         LOAD: begin
+            ALU_FUN = ALU_ADD; 
+            srcA_SEL = RS1; 
+            srcB_SEL = ITYPE; 
+            RF_SEL = DOUT2;
          end
 
-         STORE:
-         begin
-            ALU_FUN = 4'b0000; 
-            srcA_SEL = 1'b0; 
-            srcB_SEL = 2'b10;
+         STORE: begin
+            ALU_FUN = ALU_ADD; 
+            srcA_SEL = RS1; 
+            srcB_SEL = STYPE;
          end
 
 
-         OP_IMM:
-         begin
-            srcA_SEL = 1'b0; 
-            srcB_SEL = 2'b01;
-            RF_SEL = 2'b11; 
+         OP_IMM: begin
             
-            case(FUNC3)
-               3'b000: begin // ADDI
-                  ALU_FUN = 4'b0000;
+            srcA_SEL = RS1; 
+            srcB_SEL = ITYPE;
+            RF_SEL = ALU_RES; 
+            
+            case(IMMED_F3)
+               ADDI: begin // ADDI
+                  ALU_FUN = ALU_ADD;
                end
-               3'b010: begin // SLTI
-                  ALU_FUN = 4'b0010; // slt
+               SLTI: begin // SLTI
+                  ALU_FUN = ALU_SLT; // slt
                end
-               3'b011: begin // SLTIU
-                  ALU_FUN = 4'b0011; // sltu
+               SLTU: begin // SLTIU
+                  ALU_FUN = ALU_SLTU; // sltu
                end
-               3'b110: begin // ORI
-                  ALU_FUN = 4'b0110; // or
+               ORI: begin // ORI
+                  ALU_FUN = ALU_OR; // or
                end
-               3'b100: begin // XORI
-                  ALU_FUN = 4'b0100; // xor
+               XORI: begin // XORI
+                  ALU_FUN = ALU_XOR; // xor
                end
-               3'b111: begin // ANDI
-                  ALU_FUN = 4'b0111; // and
+               ANDI: begin // ANDI
+                  ALU_FUN = ALU_AND; // and
                end
-               3'b001: begin // SLLI
-                  ALU_FUN = 4'b0001; // sll
+               SLLI: begin // SLLI
+                  ALU_FUN = ALU_SLL; // sll
                end
-               3'b101: begin
-                  case(func7)
-                     1'b0: begin // SRLI
-                        ALU_FUN = 4'b0101; // srl
+               IMMED_R_SHFT: begin
+                  case(IMMED_F7)
+                     IMMED_SRLI: begin // SRLI
+                        ALU_FUN = ALU_SRL; // srl
                      end
-                     1'b1: begin // SRAI
-                        ALU_FUN = 4'b1101; // sra
+                     IMMED_SRA: begin // SRAI
+                        ALU_FUN = ALU_SRA; // sra
                      end
                   endcase
 
                end
 					
-               default: 
-               begin
-                  PC_SEL = 2'b00; 
-                  ALU_FUN = 4'b1111;
-                  srcA_SEL = 1'b0; 
-                  srcB_SEL = 2'b00; 
-                  RF_SEL = 2'b00; 
+               default: begin
+                  PC_SEL = PC_SEL_PC; 
+                  ALU_FUN = ALU_DEADBEEF;
+                  srcA_SEL = RS1; 
+                  srcB_SEL = RS2; 
+                  RF_SEL = PC4; 
                end
             endcase
          end
 
          OP_RG3: begin
-            srcA_SEL = 1'b0;
-            srcB_SEL = 2'b00;
-            RF_SEL = 2'b11;
+            srcA_SEL = RS1;
+            srcB_SEL = RS2;
+            RF_SEL = ALU_RES;
 
-            case (FUNC3)
-               3'b000: begin // ADD + SUB
-                  case (func7)
-                     1'b0: begin // ADD
-                        ALU_FUN = 4'b0000;
+            case (REG_F3)
+               ADD_SUB: begin // ADD + SUB
+                  case (REG_AS_F7)
+                     ADD: begin // ADD
+                        ALU_FUN = ALU_ADD;
                      end
-                     1'b1: begin // SUB
-                        ALU_FUN = 4'b1000;
-                     end
-                  endcase
-               end
-
-               3'b001: begin // SLL
-                  ALU_FUN = 4'b0001;
-               end
-
-               3'b010: begin // SLT
-                  ALU_FUN = 4'b0010;
-               end
-
-               3'b011: begin // SLTU
-                  ALU_FUN = 4'b0011;
-               end
-
-               3'b100: begin // XOR
-                  ALU_FUN = 4'b0100;
-               end
-
-               3'b101: begin // SRL + SRA
-                 case (func7) 
-                     1'b0: begin // SRL
-                        ALU_FUN = 4'b0101;
-                     end
-                     1'b1: begin // SRA
-                        ALU_FUN = 4'b1101;
+                     SUB: begin // SUB
+                        ALU_FUN = ALU_SUB;
                      end
                   endcase
                end
 
-               3'b110: begin // OR
-                  ALU_FUN = 4'b0110;
+               SLL: begin // SLL
+                  ALU_FUN = ALU_SLL;
                end
 
-               3'b111: begin // AND
-                  ALU_FUN = 4'b0111;
+               SLT: begin // SLT
+                  ALU_FUN = ALU_SLT;
+               end
+
+               SLTU: begin // SLTU
+                  ALU_FUN = ALU_SLTU;
+               end
+
+               XOR: begin // XOR
+                  ALU_FUN = ALU_XOR;
+               end
+
+               REG_R_SHFT: begin // SRL + SRA
+                 case (REG_RSHFT_F7) 
+                     REG_SRL: begin // SRL
+                        ALU_FUN = ALU_SRL;
+                     end
+                     REG_SRA: begin // SRA
+                        ALU_FUN = ALU_SRA;
+                     end
+                  endcase
+               end
+
+               OR: begin // OR
+                  ALU_FUN = ALU_OR;
+               end
+
+               AND: begin // AND
+                  ALU_FUN = ALU_AND;
                end
 
                default: begin
-                  srcA_SEL = 1'b0;
-                  srcB_SEL = 2'b00;
-                  RF_SEL = 2'b00;
-                  ALU_FUN = 4'b1111; // DEADBEEF
+                  srcA_SEL = RS1;
+                  srcB_SEL = RS2;
+                  RF_SEL = PC4;
+                  ALU_FUN = ALU_DEADBEEF;
                end
             endcase
          end
 
          default:
          begin
-            PC_SEL = 2'b00; 
-            srcB_SEL = 2'b00; 
-            RF_SEL = 2'b00; 
-            srcA_SEL = 1'b0; 
-            ALU_FUN = 4'b0000;
+            PC_SEL = PC_SEL_PC;
+            srcA_SEL = RS1; 
+            srcB_SEL = RS2; 
+            RF_SEL = PC4;  
+            ALU_FUN = ALU_DEADBEEF;
          end
       endcase
    end
