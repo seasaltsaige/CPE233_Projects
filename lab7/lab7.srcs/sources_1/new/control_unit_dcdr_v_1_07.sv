@@ -46,17 +46,20 @@
 `include "riscv_instruction_types.svh"
 
 module CU_DCDR(
-    input br_eq, 
-    input br_lt, 
-    input br_ltu,
-    input [6:0] opcode,   //-  ir[6:0]
-    input func7,          //-  ir[30]
-    input [2:0] func3,    //-  ir[14:12] 
-    output logic [3:0] ALU_FUN,
-    output logic [1:0] PC_SEL,
-    output logic srcA_SEL,
-    output logic [1:0] srcB_SEL, 
-    output logic [1:0] RF_SEL
+   input br_eq, 
+   input br_lt, 
+   input br_ltu,
+   input [6:0] opcode,   //-  ir[6:0]
+   input func7,          //-  ir[30]
+   input [2:0] func3,    //-  ir[14:12]
+   
+   input int_taken,
+
+   output logic [3:0] ALU_FUN,
+   output logic [1:0] PC_SEL,
+   output logic srcA_SEL,
+   output logic [1:0] srcB_SEL, 
+   output logic [1:0] RF_SEL
 	);
 
    // Cast opcode to opcode_t enum type   
