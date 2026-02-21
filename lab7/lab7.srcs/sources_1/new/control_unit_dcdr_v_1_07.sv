@@ -55,10 +55,11 @@ module CU_DCDR(
    
    input int_taken,
 
+
    output logic [3:0] ALU_FUN,
-   output logic [1:0] PC_SEL,
-   output logic srcA_SEL,
-   output logic [1:0] srcB_SEL, 
+   output logic [2:0] PC_SEL,
+   output logic [1:0] srcA_SEL, 
+   output logic [2:0] srcB_SEL, 
    output logic [1:0] RF_SEL
 	);
 

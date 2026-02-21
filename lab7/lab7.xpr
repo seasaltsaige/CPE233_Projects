@@ -113,6 +113,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../MODULES/mux_2t1_nb_v1_04.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/new/CSR.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
@@ -149,14 +157,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../MODULES/mux_2t1_nb_v1_04.v">
+      <File Path="$PPRDIR/../MODULES/mux_4t1_nb_v1_06.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../MODULES/mux_4t1_nb_v1_06.v">
+      <File Path="$PPRDIR/../MODULES/mux_8t1_nb_v1_03.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -219,7 +227,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../MODULES/OTTER_Wrapper_v1_08.sv">
+      <File Path="$PSRCDIR/sources_1/new/OTTER_Wrapper_v1_08.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>

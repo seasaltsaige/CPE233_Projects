@@ -32,7 +32,7 @@ module OTTER_MCU(
     
     
     wire PC_WE;
-    wire [1:0] PC_SEL;
+    wire [2:0] PC_SEL;
     wire [31:0] PC_ADDR;
    
     wire [31:0] ADDR_MUX_OUT;
@@ -63,8 +63,8 @@ module OTTER_MCU(
     wire [31:0] s_type;
       
     // ALU STUFF
-    wire alu_srcA_SEL;
-    wire [1:0] alu_srcB_SEL;
+    wire [1:0] alu_srcA_SEL;
+    wire [2:0] alu_srcB_SEL;
     wire [3:0] alu_fun;
     wire [31:0] alu_srcA;
     wire [31:0] alu_srcB;
@@ -73,7 +73,19 @@ module OTTER_MCU(
    
     // CU_FSM STUFF
     wire reset;
-    
+    wire csr_WE;
+    wire int_taken;
+    wire mret_exec;
+
+    // CSR STUFF
+    wire mstatus;
+    wire mepc [31:0];
+    wire mtvec [31:0];
+    wire csr_RD [31:0];
+
+    wire cu_intr;
+    assign cu_intr = intr && mstatus;
+
     // CU_DCDR STUFF
     wire memWE2;
     wire memRDEN1;
@@ -85,13 +97,17 @@ module OTTER_MCU(
     wire br_ltu;
 
     // Main program counter MUX for the address input
-    mux_4t1_nb  #(.n(32)) PROG_CTR_MUX  (
-        .SEL(PC_SEL), 
-        .D0(PC_ADDR + 32'd4), 
-        .D1(jalr), 
-        .D2(branch), 
+    mux_8t1_nb #(.n(32)) PROG_CTR_MUX(
+        .SEL(PC_SEL),
+        .D0(PC_ADDR + 32'd4),
+        .D1(jalr),
+        .D2(branch),
         .D3(jal),
-        .D_OUT(ADDR_MUX_OUT) 
+        .D4(mtvec),
+        .D5(mepc),
+        .D6(32'h0),
+        .D7(32'h0),
+        .D_OUT(ADDR_MUX_OUT)
     );
     
     PC PROGRAM_COUNTER(
@@ -145,7 +161,7 @@ module OTTER_MCU(
     mux_4t1_nb  #(.n(32)) REG_FILE_MUX ( 
         .SEL(RF_SEL), 
         .D0(PC_ADDR + 32'd4), 
-        .D1(32'd0), 
+        .D1(csr_RD), 
         .D2(DOUT2), 
         .D3(alu_res),
         .D_OUT(W_DATA)
@@ -161,23 +177,30 @@ module OTTER_MCU(
         .rs1(rs1), 
         .rs2(rs2)  
     );
-    
-    
-    mux_2t1_nb  #(.n(32)) ALU_SRC_A_MUX (
-        .SEL(alu_srcA_SEL), 
-        .D0(rs1), 
-        .D1(u_type), 
-        .D_OUT(alu_srcA) 
-    ); 
-    
-    mux_4t1_nb  #(.n(32)) ALU_SRC_B_MUX ( 
-        .SEL(alu_srcB_SEL), 
-        .D0(rs2), 
-        .D1(i_type), 
-        .D2(s_type), 
+
+
+    mux_4t1_nb #(.n(32)) ALU_SRC_A_MUX (
+        .SEL(alu_srcA_SEL),
+        .D0(rs1),
+        .D1(u_type),
+        .D2(~rs1),
+        .D3(32'h0),
+        .D_OUT(alu_srcA)
+    );
+
+    mux_8t1_nb #(.n(32)) ALU_SRC_B_MUX (
+        .SEL(alu_srcB_SEL),
+        .D0(rs2),
+        .D1(i_type),
+        .D2(s_type),
         .D3(PC_ADDR),
+        .D4(csr_RD),
+        .D5(32'h0),
+        .D6(32'h0),
+        .D7(32'h0),
         .D_OUT(alu_srcB)
     );
+    
         
     riscv_alu ALU(
         .alu_fun(alu_fun),
@@ -211,7 +234,7 @@ module OTTER_MCU(
     
     
     CU_FSM cu_fsm(
-        .intr(1'b0),
+        .intr(cu_intr),
         .clk(clk),
         .RST(RST),
         .opcode(DOUT1[6:0]),   // ir[6:0]
@@ -224,8 +247,22 @@ module OTTER_MCU(
         .reset(reset)   
     );
     
-    
-    
+
+    CSR csr (
+        .CLK(clk),
+        .RST(reset),
+        .MRET_EXEC(mret_exec),
+        .INT_TAKEN(int_taken),
+        .ADDR(DOUT1[31:20]),
+        .PC(PC_ADDR),
+        .WD(alu_res),
+        .WR_EN(csr_WE),
+
+        .RD(csr_RD),
+        .CSR_MEPC(mepc),
+        .CSR_MTVEC(mtvec),
+        .CSR_MSTATUS_MIE(mstatus)
+    );
     
     // Assign IO output busses
     assign iobus_out = rs2;
