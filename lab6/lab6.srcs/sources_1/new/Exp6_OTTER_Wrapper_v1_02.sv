@@ -21,7 +21,7 @@
 //            
 //////////////////////////////////////////////////////////////////////////////////
 
-module OTTER_Wrapper(
+module OTTER_Wrapper_EXP_6(
    input clk,
    input [4:0] buttons,
    input [15:0] switches,
