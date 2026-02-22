@@ -79,12 +79,11 @@ module OTTER_MCU(
 
     // CSR STUFF
     wire mstatus;
-    wire mepc [31:0];
-    wire mtvec [31:0];
-    wire csr_RD [31:0];
+    wire [31:0] mepc;
+    wire [31:0] mtvec;
+    wire [31:0] csr_RD;
 
     wire cu_intr;
-    assign cu_intr = intr && mstatus;
 
     // CU_DCDR STUFF
     wire memWE2;
@@ -202,7 +201,7 @@ module OTTER_MCU(
     );
     
         
-    riscv_alu ALU(
+    riscv_alu ALU (
         .alu_fun(alu_fun),
         .srcA(alu_srcA),
         .srcB(alu_srcB),
@@ -210,7 +209,7 @@ module OTTER_MCU(
     );
     
     // Control modules
-    BRANCH_COND_GEN branch_cond_gen(
+    BRANCH_COND_GEN branch_cond_gen (
         .rs1(rs1),
         .rs2(rs2),
         .br_eq(br_eq),
@@ -218,33 +217,36 @@ module OTTER_MCU(
         .br_ltu(br_ltu)
     );
     
-    CU_DCDR cu_dcdr(
+    CU_DCDR cu_dcdr (
         .br_eq(br_eq), 
         .br_lt(br_lt), 
         .br_ltu(br_ltu),
         .opcode(DOUT1[6:0]),    
         .func7(DOUT1[30]),    
         .func3(DOUT1[14:12]),    
+        .int_taken(int_taken),
         .ALU_FUN(alu_fun),
         .PC_SEL(PC_SEL),
         .srcA_SEL(alu_srcA_SEL),
         .srcB_SEL(alu_srcB_SEL), 
         .RF_SEL(RF_SEL)   
-    );
+    );    
     
-    
-    CU_FSM cu_fsm(
+    CU_FSM cu_fsm (
         .intr(cu_intr),
         .clk(clk),
         .RST(RST),
         .opcode(DOUT1[6:0]),   // ir[6:0]
-        
+        .func3(DOUT1[14:12]),
         .PC_WE(PC_WE),
         .RF_WE(RF_WE),
         .memWE2(memWE2),
         .memRDEN1(memRDEN1),
         .memRDEN2(memRDEN2),
-        .reset(reset)   
+        .reset(reset),
+        .csr_WE(csr_WE),
+        .int_taken(int_taken),
+        .mret_exec(mret_exec)
     );
     
 
@@ -267,5 +269,6 @@ module OTTER_MCU(
     // Assign IO output busses
     assign iobus_out = rs2;
     assign iobus_addr = alu_res;
+    assign cu_intr = intr && mstatus;
     
 endmodule

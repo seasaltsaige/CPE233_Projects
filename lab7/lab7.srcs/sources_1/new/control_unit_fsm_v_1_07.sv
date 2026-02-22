@@ -48,7 +48,7 @@ module CU_FSM(
    input [6:0] opcode,     // ir[6:0]
 
    input [2:0] func3,      // ir[14:12]
-   
+
    output logic PC_WE,
    output logic RF_WE,
    output logic memWE2,
@@ -61,16 +61,20 @@ module CU_FSM(
    output logic mret_exec
    );
 
-   typedef  enum logic [1:0] {
+   typedef  enum logic [2:0] {
       st_INIT,
 	   st_FET,
       st_EX,
-      st_WB
+      st_WB,
+      st_INTR // interrupt state
    } state_type;
    state_type NS, PS;
     
 	opcode_t OPCODE;    //- symbolic names for instruction opcodes
 	assign OPCODE = opcode_t'(opcode); //- Cast input as enum
+
+   sys_f3_t SYS_F3;
+   assign SYS_F3 = sys_f3_t'(func3);
 
 	//- state registers (PS)
 	always @(posedge clk) begin
@@ -82,12 +86,15 @@ module CU_FSM(
     
    always_comb begin              
       //- schedule all outputs to avoid latch
-      PC_WE    = DISABLE;
-      RF_WE    = DISABLE;
-      reset    = DISABLE;
-      memWE2   = DISABLE;
-      memRDEN1 = DISABLE;
-      memRDEN2 = DISABLE;
+      PC_WE     = DISABLE;
+      RF_WE     = DISABLE;
+      reset     = DISABLE;
+      memWE2    = DISABLE;
+      memRDEN1  = DISABLE;
+      memRDEN2  = DISABLE;
+      csr_WE    = DISABLE;
+      int_taken = DISABLE;
+      mret_exec = DISABLE;
                    
       case (PS)
          st_INIT: begin // INIT state  
@@ -110,48 +117,86 @@ module CU_FSM(
                AUIPC: begin
                   PC_WE = ENABLE;
                   RF_WE = ENABLE;
-                  NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
                end
 				   STORE: begin
                   PC_WE = ENABLE;
                   memWE2 = ENABLE;
-                  NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
                end
                  
 				   BRANCH: begin
                   PC_WE = ENABLE;
-                  NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
                end
 				
 				   LUI: begin
                   PC_WE = ENABLE;
                   RF_WE = ENABLE;			      
-				      NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
 				   end
 				  
 				   OP_IMM: begin 
                   PC_WE = ENABLE;
                   RF_WE = ENABLE;
-				      NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
 				   end
 				   OP_RG3: begin
                   PC_WE = ENABLE;
                   RF_WE = ENABLE;
-                  NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
                end
 	            JAL: begin
 				      PC_WE = ENABLE;
                   RF_WE = ENABLE;
-				      NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
 				   end
 				   
 				   JALR: begin
                   PC_WE = ENABLE;
                   RF_WE = ENABLE;
-                  NS = st_FET;
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
+               end 
+
+               OP_SYS: begin
+                  case (SYS_F3)
+                     MRET: begin // Write to part of csr mstatus reg (set bit) ALU OR, potentially simply setting though
+                        csr_WE = ENABLE;
+                        RF_WE = DISABLE; // MRET is the only sys instruction that does not write to reg file
+                        mret_exec = ENABLE;
+                     end
+
+                     CSRRW: begin // Write to csr reg
+                        csr_WE = ENABLE;
+                        RF_WE = ENABLE;
+                     end
+
+                     CSRRS: begin // Write to part of csr reg (set bit) ALU OR
+                        csr_WE = ENABLE;
+                        RF_WE = ENABLE;
+                     end
+
+                     CSRRC: begin // Write to part of csr reg (clear bit) ALU AND
+                        csr_WE = ENABLE;
+                        RF_WE = ENABLE;
+                     end
+
+                  endcase
+
+                  PC_WE = ENABLE;
+
+                  if (intr) NS = st_INTR;
+                  else NS = st_FET;
                end
-                    
-                    
+
                default: begin 
 				      NS = st_FET;
 				   end
@@ -162,6 +207,16 @@ module CU_FSM(
             // Write to reg file
             PC_WE = ENABLE;
             RF_WE = ENABLE; 
+            if (intr) NS = st_INTR;
+            else NS = st_FET;
+         end
+
+
+         st_INTR: begin
+            int_taken = ENABLE; // interrupt happened
+            PC_WE = ENABLE;
+            RF_WE = DISABLE;
+
             NS = st_FET;
          end
 

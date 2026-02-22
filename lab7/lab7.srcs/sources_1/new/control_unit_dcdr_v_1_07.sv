@@ -86,6 +86,9 @@ module CU_DCDR(
     
    reg_r_shft_f7_t REG_RSHFT_F7;
    assign REG_RSHFT_F7 = reg_r_shft_f7_t'(func7);
+
+   sys_f3_t SYS_F3;
+   assign SYS_F3 = sys_f3_t'(func3);
        
    always_comb
    begin 
@@ -96,220 +99,260 @@ module CU_DCDR(
       RF_SEL   = PC4;
       ALU_FUN  = ALU_ADD;
 		
-      case(OPCODE)
-         LUI: begin
-            ALU_FUN = ALU_LUI; 
-            srcA_SEL = UTYPE;
-            RF_SEL = ALU_RES; 
-         end
+      if (int_taken) begin
+         PC_SEL = PC_SEL_MTVEC;
+      end else begin
 
-		 AUIPC: begin
-            srcA_SEL = UTYPE;
-            srcB_SEL = ALU_PC;
-            ALU_FUN = ALU_ADD;
-            RF_SEL = ALU_RES;
-         end
+         case(OPCODE)
+            LUI: begin
+               ALU_FUN = ALU_LUI; 
+               srcA_SEL = UTYPE;
+               RF_SEL = ALU_RES; 
+            end
 
-         JAL: begin
-			PC_SEL = PC_SEL_JAL;
-            RF_SEL = PC4;
-		end
+            AUIPC: begin
+               srcA_SEL = UTYPE;
+               srcB_SEL = ALU_PC;
+               ALU_FUN = ALU_ADD;
+               RF_SEL = ALU_RES;
+            end
 
-		 JALR: begin
-            PC_SEL = PC_SEL_JALR;
-            RF_SEL = PC4;
-         end
+            JAL: begin
+               PC_SEL = PC_SEL_JAL;
+               RF_SEL = PC4;
+            end
 
-         BRANCH: begin
-            case(BRANCH_F3)  
-               BEQ: begin
-                  if (br_eq) begin
-                     PC_SEL = PC_SEL_BRANCH;
-                  end else begin
+         JALR: begin
+               PC_SEL = PC_SEL_JALR;
+               RF_SEL = PC4;
+            end
+
+            BRANCH: begin
+               case(BRANCH_F3)  
+                  BEQ: begin
+                     if (br_eq) begin
+                        PC_SEL = PC_SEL_BRANCH;
+                     end else begin
+                        PC_SEL = PC_SEL_PC;
+                     end
+                  end
+
+                  BNE: begin
+                     if (!br_eq) begin
+                        PC_SEL = PC_SEL_BRANCH;;
+                     end else begin
+                        PC_SEL = PC_SEL_PC;
+                     end
+                  end
+
+                  BLT: begin
+                     if (br_lt) begin
+                        PC_SEL = PC_SEL_BRANCH;
+                     end else begin
+                        PC_SEL = PC_SEL_PC;
+                     end
+                  end
+
+                  BGE: begin
+                     if (!br_lt) begin
+                        PC_SEL = PC_SEL_BRANCH;
+                     end else begin
+                        PC_SEL = PC_SEL_PC;
+                     end
+                  end
+
+                  BLTU: begin
+                     if (br_ltu) begin
+                        PC_SEL = PC_SEL_BRANCH;
+                     end else begin
+                        PC_SEL = PC_SEL_PC;
+                     end
+                  end
+
+                  BGEU: begin
+                     if (!br_ltu) begin
+                        PC_SEL = PC_SEL_BRANCH;
+                     end else begin
+                        PC_SEL = PC_SEL_PC;
+                     end
+                  end
+
+                  default: begin
                      PC_SEL = PC_SEL_PC;
                   end
-               end
+               endcase
+            end
 
-               BNE: begin
-                  if (!br_eq) begin
-                     PC_SEL = PC_SEL_BRANCH;;
-                  end else begin
+            LOAD: begin
+               ALU_FUN = ALU_ADD; 
+               srcA_SEL = RS1; 
+               srcB_SEL = ITYPE; 
+               RF_SEL = DOUT2;
+            end
+
+            STORE: begin
+               ALU_FUN = ALU_ADD; 
+               srcA_SEL = RS1; 
+               srcB_SEL = STYPE;
+            end
+
+
+            OP_IMM: begin
+               
+               srcA_SEL = RS1; 
+               srcB_SEL = ITYPE;
+               RF_SEL = ALU_RES; 
+               
+               case(IMMED_F3)
+                  ADDI: begin // ADDI
+                     ALU_FUN = ALU_ADD;
+                  end
+                  SLTI: begin // SLTI
+                     ALU_FUN = ALU_SLT; // slt
+                  end
+                  SLTU: begin // SLTIU
+                     ALU_FUN = ALU_SLTU; // sltu
+                  end
+                  ORI: begin // ORI
+                     ALU_FUN = ALU_OR; // or
+                  end
+                  XORI: begin // XORI
+                     ALU_FUN = ALU_XOR; // xor
+                  end
+                  ANDI: begin // ANDI
+                     ALU_FUN = ALU_AND; // and
+                  end
+                  SLLI: begin // SLLI
+                     ALU_FUN = ALU_SLL; // sll
+                  end
+                  IMMED_R_SHFT: begin
+                     case(IMMED_F7)
+                        IMMED_SRLI: begin // SRLI
+                           ALU_FUN = ALU_SRL; // srl
+                        end
+                        IMMED_SRA: begin // SRAI
+                           ALU_FUN = ALU_SRA; // sra
+                        end
+                     endcase
+
+                  end
+                  
+                  default: begin
+                     PC_SEL = PC_SEL_PC; 
+                     ALU_FUN = ALU_DEADBEEF;
+                     srcA_SEL = RS1; 
+                     srcB_SEL = RS2; 
+                     RF_SEL = PC4; 
+                  end
+               endcase
+            end
+
+            OP_RG3: begin
+               srcA_SEL = RS1;
+               srcB_SEL = RS2;
+               RF_SEL = ALU_RES;
+
+               case (REG_F3)
+                  ADD_SUB: begin // ADD + SUB
+                     case (REG_AS_F7)
+                        ADD: begin // ADD
+                           ALU_FUN = ALU_ADD;
+                        end
+                        SUB: begin // SUB
+                           ALU_FUN = ALU_SUB;
+                        end
+                     endcase
+                  end
+
+                  SLL: begin // SLL
+                     ALU_FUN = ALU_SLL;
+                  end
+
+                  SLT: begin // SLT
+                     ALU_FUN = ALU_SLT;
+                  end
+
+                  SLTU: begin // SLTU
+                     ALU_FUN = ALU_SLTU;
+                  end
+
+                  XOR: begin // XOR
+                     ALU_FUN = ALU_XOR;
+                  end
+
+                  REG_R_SHFT: begin // SRL + SRA
+                  case (REG_RSHFT_F7) 
+                        REG_SRL: begin // SRL
+                           ALU_FUN = ALU_SRL;
+                        end
+                        REG_SRA: begin // SRA
+                           ALU_FUN = ALU_SRA;
+                        end
+                     endcase
+                  end
+
+                  OR: begin // OR
+                     ALU_FUN = ALU_OR;
+                  end
+
+                  AND: begin // AND
+                     ALU_FUN = ALU_AND;
+                  end
+
+                  default: begin
+                     srcA_SEL = RS1;
+                     srcB_SEL = RS2;
+                     RF_SEL = PC4;
+                     ALU_FUN = ALU_DEADBEEF;
+                  end
+               endcase
+            end
+
+            OP_SYS: begin
+
+               case (SYS_F3) 
+                  CSRRW: begin
+                     RF_SEL = CSR; // write csr rd to reg file
+                     srcA_SEL = RS1; // copy rs1 to alu_res
+                     srcB_SEL = RS2; // not used, just setting for completeness
+                     ALU_FUN = ALU_LUI; // LUI is just a copy in the ALU
                      PC_SEL = PC_SEL_PC;
                   end
-               end
 
-               BLT: begin
-                  if (br_lt) begin
-                     PC_SEL = PC_SEL_BRANCH;
-                  end else begin
+                  CSRRC: begin
+                     ALU_FUN = ALU_AND; // clear bits
+                     srcA_SEL = NRS1; // inverted rs1
+                     srcB_SEL = CSR_RD; // current rd
+                     RF_SEL = CSR; // write csr to reg file
                      PC_SEL = PC_SEL_PC;
                   end
-               end
 
-               BGE: begin
-                  if (!br_lt) begin
-                     PC_SEL = PC_SEL_BRANCH;
-                  end else begin
+                  CSRRS: begin
+                     ALU_FUN = ALU_OR; // set bits
+                     srcA_SEL = RS1; // rs1
+                     srcB_SEL = CSR_RD; // current rd
+                     RF_SEL = CSR; // write csr to reg file
                      PC_SEL = PC_SEL_PC;
                   end
-               end
 
-               BLTU: begin
-                  if (br_ltu) begin
-                     PC_SEL = PC_SEL_BRANCH;
-                  end else begin
-                     PC_SEL = PC_SEL_PC;
+                  MRET: begin
+                     PC_SEL = PC_SEL_MEPC; // Return to MEPC
+
                   end
-               end
+               endcase
 
-               BGEU: begin
-                  if (!br_ltu) begin
-                     PC_SEL = PC_SEL_BRANCH;
-                  end else begin
-                     PC_SEL = PC_SEL_PC;
-                  end
-               end
+            end
 
-               default: begin
-                  PC_SEL = PC_SEL_PC;
-               end
-            endcase
-         end
-
-         LOAD: begin
-            ALU_FUN = ALU_ADD; 
-            srcA_SEL = RS1; 
-            srcB_SEL = ITYPE; 
-            RF_SEL = DOUT2;
-         end
-
-         STORE: begin
-            ALU_FUN = ALU_ADD; 
-            srcA_SEL = RS1; 
-            srcB_SEL = STYPE;
-         end
-
-
-         OP_IMM: begin
-            
-            srcA_SEL = RS1; 
-            srcB_SEL = ITYPE;
-            RF_SEL = ALU_RES; 
-            
-            case(IMMED_F3)
-               ADDI: begin // ADDI
-                  ALU_FUN = ALU_ADD;
-               end
-               SLTI: begin // SLTI
-                  ALU_FUN = ALU_SLT; // slt
-               end
-               SLTU: begin // SLTIU
-                  ALU_FUN = ALU_SLTU; // sltu
-               end
-               ORI: begin // ORI
-                  ALU_FUN = ALU_OR; // or
-               end
-               XORI: begin // XORI
-                  ALU_FUN = ALU_XOR; // xor
-               end
-               ANDI: begin // ANDI
-                  ALU_FUN = ALU_AND; // and
-               end
-               SLLI: begin // SLLI
-                  ALU_FUN = ALU_SLL; // sll
-               end
-               IMMED_R_SHFT: begin
-                  case(IMMED_F7)
-                     IMMED_SRLI: begin // SRLI
-                        ALU_FUN = ALU_SRL; // srl
-                     end
-                     IMMED_SRA: begin // SRAI
-                        ALU_FUN = ALU_SRA; // sra
-                     end
-                  endcase
-
-               end
-					
-               default: begin
-                  PC_SEL = PC_SEL_PC; 
-                  ALU_FUN = ALU_DEADBEEF;
-                  srcA_SEL = RS1; 
-                  srcB_SEL = RS2; 
-                  RF_SEL = PC4; 
-               end
-            endcase
-         end
-
-         OP_RG3: begin
-            srcA_SEL = RS1;
-            srcB_SEL = RS2;
-            RF_SEL = ALU_RES;
-
-            case (REG_F3)
-               ADD_SUB: begin // ADD + SUB
-                  case (REG_AS_F7)
-                     ADD: begin // ADD
-                        ALU_FUN = ALU_ADD;
-                     end
-                     SUB: begin // SUB
-                        ALU_FUN = ALU_SUB;
-                     end
-                  endcase
-               end
-
-               SLL: begin // SLL
-                  ALU_FUN = ALU_SLL;
-               end
-
-               SLT: begin // SLT
-                  ALU_FUN = ALU_SLT;
-               end
-
-               SLTU: begin // SLTU
-                  ALU_FUN = ALU_SLTU;
-               end
-
-               XOR: begin // XOR
-                  ALU_FUN = ALU_XOR;
-               end
-
-               REG_R_SHFT: begin // SRL + SRA
-                 case (REG_RSHFT_F7) 
-                     REG_SRL: begin // SRL
-                        ALU_FUN = ALU_SRL;
-                     end
-                     REG_SRA: begin // SRA
-                        ALU_FUN = ALU_SRA;
-                     end
-                  endcase
-               end
-
-               OR: begin // OR
-                  ALU_FUN = ALU_OR;
-               end
-
-               AND: begin // AND
-                  ALU_FUN = ALU_AND;
-               end
-
-               default: begin
-                  srcA_SEL = RS1;
-                  srcB_SEL = RS2;
-                  RF_SEL = PC4;
-                  ALU_FUN = ALU_DEADBEEF;
-               end
-            endcase
-         end
-
-         default:
-         begin
-            PC_SEL = PC_SEL_PC;
-            srcA_SEL = RS1; 
-            srcB_SEL = RS2; 
-            RF_SEL = PC4;  
-            ALU_FUN = ALU_DEADBEEF;
-         end
-      endcase
+            default:
+            begin
+               PC_SEL = PC_SEL_PC;
+               srcA_SEL = RS1; 
+               srcB_SEL = RS2; 
+               RF_SEL = PC4;  
+               ALU_FUN = ALU_DEADBEEF;
+            end
+         endcase
+      end
    end
 
 endmodule
