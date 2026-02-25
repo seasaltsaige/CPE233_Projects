@@ -49,7 +49,7 @@ OTTER_Wrapper my_wrapper(
       buttons = 5'b01000;    
       switches = 16'h0000;
       
-      #1000
+      #200
       
       buttons = 5'b00000;
       
