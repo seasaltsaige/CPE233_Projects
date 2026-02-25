@@ -4,9 +4,9 @@
 // Engineer: 
 // 
 // Create Date: 02/12/2026 02:54:44 PM
-// Design Name: 
+// Design Name: Branch Condition Generator
 // Module Name: BRANCH_COND_GEN
-// Project Name: 
+// Project Name: Lab 6
 // Target Devices: 
 // Tool Versions: 
 // Description: 
