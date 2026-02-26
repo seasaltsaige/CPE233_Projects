@@ -1,22 +1,16 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
+// Company: Cal Poly SLO
+// Engineer: Saige Sloan
 // 
 // Create Date: 02/12/2026 02:46:15 PM
-// Design Name: 
+// Design Name: OTTER_MCU
 // Module Name: otter_mcu
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Project Name: Complete MCU
+// Target Devices: Basys3 (xc7a35tcpg236-1)
+// Tool Versions: Vivado 2025.2
+// Description: The complete OTTER microcontroller implementation, including all instructions
+//              including SYS instructions.
 //////////////////////////////////////////////////////////////////////////////////
 
 
