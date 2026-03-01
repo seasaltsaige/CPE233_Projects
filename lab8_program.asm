@@ -3,18 +3,18 @@
 # Description: 
 
 # ALIAS SOME REGISTERS FOR READIBILITY
-.eqv SWITCHES   s0
-.eqv BUTTONS    s1
-.eqv LEDS       s2
-.eqv SEGS       s3
-.eqv ANODES     s4
-.eqv SSEG_LUT   s5
-.eqv AN_CUR     s6
-.eqv LED_CUR    s7
-.eqv CNT_CUR    s8
-.eqv CNT_DISP   a0
+.eqv SWITCHES   s0                  # Switches Port
+.eqv BUTTONS    s1                  # Buttons Port
+.eqv LEDS       s2                  # LEDs Port
+.eqv SEGS       s3                  # SSEG Port
+.eqv ANODES     s4                  # Anodes Port
+.eqv SSEG_LUT   s5                  # SSEG Look up table base address
+.eqv AN_CUR     s6                  # Current anode to turn on
+.eqv LED_CUR    s7                  # Current LED to send to IO
+.eqv CNT_CUR    s8                  # Current Binary Counter
+.eqv CNT_DISP   s9                  # Current BCD to be displayed value
 
-.eqv DISP_FLAG  s9                  # Flag set when count needs to be converted to BCD
+.eqv DISP_FLAG  s10                 # Flag set when count needs to be converted to BCD
 
 
 .data
