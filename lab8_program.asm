@@ -1,5 +1,6 @@
-.data
-sseg: .byte 0x03,0x9F,0x25,0x0D,0x99,0x49,0x41,0x1F,0x01,0x09 # LUT for 7-segs
+# Cal Poly SLO
+# Saige Sloan
+# Description: 
 
 # ALIAS SOME REGISTERS FOR READIBILITY
 .eqv SWITCHES   s0
@@ -10,7 +11,14 @@ sseg: .byte 0x03,0x9F,0x25,0x0D,0x99,0x49,0x41,0x1F,0x01,0x09 # LUT for 7-segs
 .eqv SSEG_LUT   s5
 .eqv AN_CUR     s6
 .eqv LED_CUR    s7
+.eqv CNT_CUR    s8
 .eqv CNT_DISP   a0
+
+.eqv DISP_FLAG  s9                  # Flag set when count needs to be converted to BCD
+
+
+.data
+sseg: .byte 0x03,0x9F,0x25,0x0D,0x99,0x49,0x41,0x1F,0x01,0x09 # LUT for 7-segs
 
 .text
 
@@ -35,7 +43,9 @@ init:
     sw AN_CUR, 0(ANODES) # Write to anodes
     mv AN_CUR, zero 
 
-    mv CNT_DISP, zero               # reset count 
+    mv CNT_DISP, zero               # reset count display 
+    mv CNT_CUR, zero                # reset current binary count
+    mv DISP_FLAG, zero              # reset display to bcd flag
 
     # Initialize LED at position 15
     li LED_CUR, 1
@@ -43,8 +53,64 @@ init:
     sw LED_CUR, 0(LEDS)
 
 main_loop:
+    beqz DISP_FLAG, skip_bcd_conversion # Skip conversion
+    
+    mv DISP_FLAG, zero              # clear flag
+    call dec_to_bcd                 # otherwise convert current binary count to bcd to be displayed
+    
+    skip_bcd_conversion:
+    
     call multiplex_anodes
+    
     j main_loop
+
+
+# The following subroutine will convert the current binary count held in
+# CNT_CUR into a BCD value (up to 4 digits) and move it into CNT_DISP
+# for the multiplexing to use
+dec_to_bcd:
+    mv t1, CNT_CUR                  # t1/CNT_CUR = input number
+    mv t0, zero                     # accumulator for BCD
+
+    # thousands digit
+    li t2, 1000                     # Load thousands
+    mv t3, zero                     # bcd[3]
+thousands_loop:
+    blt t1, t2, hundreds_start
+    sub t1, t1, t2
+    addi t3, t3, 1
+    j thousands_loop
+hundreds_start:
+    slli t3, t3, 12                 # move to top nibble
+    or t0, t0, t3                   # or it into spot in output temp
+
+    li t2, 100                      # Load hundreds
+    mv t3, zero                     # bcd[2]
+hundreds_loop:
+    blt t1, t2, tens_start
+    sub t1, t1, t2
+    addi t3, t3, 1
+    j hundreds_loop
+tens_start:
+    slli t3, t3, 8                  # Shift into place
+    or t0, t0, t3                   # or it into output
+
+    # tens digit
+    li t2, 10                       # Load tens
+    mv t3, zero                     # bcd[1]
+tens_loop:
+    blt t1, t2, units_start
+    sub t1, t1, t2
+    addi t3, t3, 1
+    j tens_loop
+units_start:
+    slli t3, t3, 4                  # move tens digit into place
+    or t0, t0, t3                   # or it into output
+
+    or t0, t0, t1                   # 1s place needs nothing special
+    mv CNT_DISP, t0                 # move it into output
+    ret
+
 
 
 # general function for multiplexing all 4 sseg segments
@@ -60,7 +126,8 @@ multiplex_anodes:
 
     li t0, 0xF
 
-    li t5, 0x8                      # this will sense i promise (maybe)
+    li t5, 0x8                      # t5 tracks the current anode to enable
+                                    # starting at the right anode, moving to the left anode
     # Do ones always!
     and t2, CNT_DISP, t0            # Isolate nibble 
     add t0, t2, SSEG_LUT            # Get address of target cathode value
@@ -88,7 +155,9 @@ multiplex_anodes:
         seqz t6, t2                 # set to 1 if lower nibble is 0
         xor AN_CUR, AN_CUR, t5      # turn current anode on
 
-        bnez t6, skip_on
+        bnez t6, skip_on            # I decided to only skip the on portion, and not exit the loop early
+                                    # So that the display does not change brightness between 0, 1, 2, 3, or all 4
+                                    # digits being displayed. A small but nice thing, in my opinion
         
         add t2, t2, SSEG_LUT        # Get offset address
         lbu t2, 0(t2)               # get byte
@@ -140,38 +209,19 @@ ISR:
     lw t0, 0(SWITCHES)              # Load from switches port
     and t0, t0, LED_CUR             # Isolate the switch the port is at
     snez t0, t0                     # If t0 is not 0, set it to 1 otherwise 0
-    beqz t0, done_if_else           # Skip if switch is off
+   
+    beqz t0, skip_reset_zero        # Skip addition if number to add is zero
 
-    # Weird shit here
-    # Add to count
-    # 0000 0000 --> 1001 1001 == 99 (bcd) == 0x99 == 153 (base 10)
-    # ifs current count is equal to 9
-    # increment 10s place by 1 (add 10000 or 0x10)
-    # and reset ones to 0
-    # otherwise just add to the ones place
-    # tbd: better way to handle this for up to 1000s place (modular)
-
-    mv t0, CNT_DISP
-    li t2, 0x99
-    beq t0, t2, reset_display
-
-
-    andi t0, CNT_DISP, 0xF          # Lower nibble of display
-    li t2, 0x9 
-    bne t0, t2, ones_else           # if count[3:0] == 9
-
-    addi CNT_DISP, CNT_DISP, 0x10   # Add to 10s place
-    andi CNT_DISP, CNT_DISP, 0xF0   # Clear 1s place
-    j done_if_else
-
-    ones_else: # else
-
-    addi CNT_DISP, CNT_DISP, 0x1    # Add to 1s place
-    j done_if_else
-
-    reset_display:
-    mv CNT_DISP, zero               # reset count when count reaches 0x99
-    done_if_else:                   # Jump label for if branch
+    ori DISP_FLAG, DISP_FLAG, 0x1   # Set flag so main routine knows to convert new value
+    li t2, 99
+    # Just for this assignment, if count is > 99 
+    beq CNT_CUR, t2, reset_zero     # If count is 99 before add, reset to 0 
+    # otherwise, add to current count
+    add CNT_CUR, CNT_CUR, t0        # Adds to current binary count
+    j skip_reset_zero
+    reset_zero:
+    mv CNT_CUR, zero                # Reset to 0
+    skip_reset_zero:
 
     lw t2, 4(sp)
     lw t0, 0(sp)
