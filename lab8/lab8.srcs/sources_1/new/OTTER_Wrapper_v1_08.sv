@@ -71,7 +71,7 @@ module OTTER_Wrapper(
     );
 
 
-    DBounce #(.n(20)) my_dbounce(
+    DBounce #(.n(16)) my_dbounce(
         .clk(s_clk),
         .sig_in(s_interrupt),
         .DB_out(debounced_interrupt)
