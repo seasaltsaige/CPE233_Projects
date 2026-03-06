@@ -55,13 +55,9 @@ ISR:
             # T17 on board, or bit t0[1]
             lw t0, 0(BUTTONS)
             
-            # Flip all bits except for our button
-            # (MASK = 11101)
-            xori t0, t0, 0x1D
             # If only our button of interest was pressed
-            # Then t0 should now contain 0x1F
-            li   t1, 0x1F
-
+            # Then t0 should just be 2
+            li   t1, 0x2
             bne  t0, t1, poll_loop
     skip_intr:
 
