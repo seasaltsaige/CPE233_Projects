@@ -1,9 +1,10 @@
 # Cal Poly SLO
 # Saige Sloan
-# Description:
-#
-#
-#
+# Description: The following program will debounce a given button based on a timer delay.
+#              once the button is asserted high and valid, you are able to execute actions
+#              based on it. Once the execution is complete, the program will then wait for 
+#              the button to be released, so that holding the button down does not execute
+#              multiple valid button presses.
 
 
 .equ BUTTONS, s0 # Button input port
