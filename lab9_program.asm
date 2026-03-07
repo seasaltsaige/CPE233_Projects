@@ -34,15 +34,15 @@ init:
     la    s0, ISR
     csrrw x0, mtvec, s0                 # Load ISR addr
     
-    li    t6, 0x1100D004  # timer counter count port address
-    li    t5, 0x000FFFFF  
-    sw    t5, 0(t6)      # init TC count 
+    li    t6, 0x1100D004    # timer counter count port address
+    li    t5, 0xC350        # ~ 1 ms w/ no prescaler
+    sw    t5, 0(t6)         # init TC count 
 
-    li    t6, 0x1100D000  # timer counter CSR port address
+    li    t6, 0x1100D000    # timer counter CSR port address
 
          
-    li    t5, 0x01        # init TC CSR
-    sw    t5, 0(t6)      # no prescale, turn on TC
+    li    t5, 0x01          # init TC CSR
+    sw    t5, 0(t6)         # no prescale, turn on TC
 
 
     li    SWITCHES, 0x11008000          # Switches input port
@@ -78,17 +78,17 @@ init:
 main:
     poll_button:
 
-        lw t0, 0(BUTTONS)   # Load input from buttons
-        andi t0, t0, 0x10   # Isolate middle button for polling 
+        lw   t0, 0(BUTTONS)     # Load input from buttons
+        andi t0, t0, 0x10       # Isolate middle button for polling 
 
-        beqz t0, main       # If button isn't pressed, exit polling
+        beqz t0, main           # If button isn't pressed, exit polling
 
-        call delay          # debounce time
+        call delay              # debounce time
 
-        lw t0, 0(BUTTONS)   # Load input from buttons
-        andi t0, t0, 0x10   # Isolate middle button for polling 
+        lw   t0, 0(BUTTONS)     # Load input from buttons
+        andi t0, t0, 0x10       # Isolate middle button for polling 
 
-        beqz t0, main       # If button isn't still high, exit back to main loop
+        beqz t0, main           # If button isn't still high, exit back to main loop
 
         # Button is now a valid press!
         # Do the led movement + count incrementing
@@ -200,13 +200,13 @@ dec_to_bcd:
 
 
 delay: 
-    li t0, 0x208D  # ~1ms debounce time?              
+    li  t0, 0x208D                  # ~1ms debounce time?              
     loop: 
-        beq t0, zero, done_loop             # leave if done
-        addi t0, t0, -1                     # decrement count
-        j loop                              # rinse, repeat
+        beq  t0, zero, done_loop    # leave if done
+        addi t0, t0, -1             # decrement count
+        j    loop                   # rinse, repeat
     done_loop: 
-        ret                                 # leave it all behind
+        ret                         # leave it all behind
 
 
 # For this lab, the ISR will represent a multiplex cycle
@@ -255,8 +255,8 @@ ISR:
 
     bnez AN_SEL, skip_helper_reset  # If ANODE SELECT hasn't gone to 0, dont need to reset 
 
-    li AN_SEL, 0x8
-    mv AN_SHFT, zero
+    li   AN_SEL, 0x8
+    mv   AN_SHFT, zero
 
     skip_helper_reset:
 
