@@ -14,21 +14,36 @@
 .eqv CNT_CUR    s8                  # Current Binary Counter
 .eqv CNT_DISP   s9                  # Current BCD to be displayed value
 
-.eqv DISP_FLAG  s10                 # Flag set when count needs to be converted to BCD
-
-
+.eqv AN_SEL     s10                 # Current bit selected anode
+                                    # Travels left to right to enable
+                                    # A given anode if the BCD value is
+                                    # not zero at that location
+.eqv AN_SHFT    s11                 # Current shift amount for BCD display
+.eqv DISP_FLAG   a0                  # I know i ran out of s regs, im sorry lol
+                                    # Flag to shift to the next anode or not
+                                    # (Utilizing timer interrupt to both display hold
+                                    #  and also blank hold)  
 .data
 sseg: .byte 0x03,0x9F,0x25,0x0D,0x99,0x49,0x41,0x1F,0x01,0x09 # LUT for 7-segs
 
 .text
 
 init:
-    li    sp, 0x0000FFFC                # Init stack
+    li    sp, 0x0000FFFC                # Init stack\\
     
     la    s0, ISR
     csrrw x0, mtvec, s0                 # Load ISR addr
-    li    s0, 0x8
-    csrrs x0, mstatus, s0               # Enable interrupts mstatus[3] = 1
+    
+    li    t6, 0x1100D004  # timer counter count port address
+    li    t5, 0x000FFFFF  
+    sw    t5, 0(t6)      # init TC count 
+
+    li    t6, 0x1100D000  # timer counter CSR port address
+
+         
+    li    t5, 0x01        # init TC CSR
+    sw    t5, 0(t6)      # no prescale, turn on TC
+
 
     li    SWITCHES, 0x11008000          # Switches input port
     li    BUTTONS, 0x11008004           # Buttons input port
@@ -38,13 +53,17 @@ init:
     li    ANODES, 0x1100C008            # Anodes output port (4 anodes)
     la    SSEG_LUT, sseg                # LUT address
 
-    # Turn off all anodes
-    li    AN_CUR, 0xF
+    
+    li    AN_CUR, 0xF                   # Turn off all anodes
+    li    AN_SEL, 0x8                   # Display 0 first
     sw    AN_CUR, 0(ANODES)             # Write to anodes
-    mv    AN_CUR, zero 
 
     mv    CNT_DISP, zero                # reset count display 
     mv    CNT_CUR, zero                 # reset current binary count
+    mv    AN_SHFT, zero                 # reset AN_SHFT 
+    mv    DISP_FLAG, zero               # Set to known state
+                                        # 0 = show next
+                                        # 1 = hold curr blank
 
     # Initialize LED at position 15
     li    LED_CUR, 1
@@ -52,10 +71,11 @@ init:
     sw    LED_CUR, 0(LEDS)
 
 
+    li    t0, 0x8
+    csrrs x0, mstatus, t0               # Enable interrupts mstatus[3] = 1
+
 
 main:
-    skip_bcd_conversion:
-
     poll_button:
 
         lw t0, 0(BUTTONS)   # Load input from buttons
@@ -72,31 +92,8 @@ main:
 
         # Button is now a valid press!
         # Do the led movement + count incrementing
-        srli LED_CUR, LED_CUR, 1
-        bnez LED_CUR, skip_set              # If led didnt overflow to 0, skip reset
-        
-        li   LED_CUR, 1
-        slli LED_CUR, LED_CUR, 15
-        
-        skip_set:
-        sw   LED_CUR, 0(LEDS)               # Store current led to output
-
-        lw   t0, 0(SWITCHES)                # Load from switches port
-        and  t0, t0, LED_CUR                # Isolate the switch the port is at
-        snez t0, t0                         # If t0 is not 0, set it to 1 otherwise 0
-    
-        beqz t0, skip_reset_zero            # Skip addition if number to add is zero
-
-        li   t2, 99
-        # Just for this assignment, if count is > 99 
-        beq  CNT_CUR, t2, reset_zero        # If count is 99 before add, reset to 0 
-        # otherwise, add to current count
-        add  CNT_CUR, CNT_CUR, t0           # Adds to current binary count
-        j    skip_reset_zero
-        reset_zero:
-        mv   CNT_CUR, zero                  # Reset to 0
-        skip_reset_zero:
-
+        call move_led_right
+        call dec_to_bcd
 
         # Block while button is held down
         falling_edge_loop:
@@ -118,6 +115,37 @@ main:
 
     j main
 
+# Subroutine which will move the displayed LED right, load the value at the
+# corresponding switch, and add to the global counter if it is switched on.
+move_led_right:
+    srli LED_CUR, LED_CUR, 1
+    bnez LED_CUR, skip_set              # If led didnt overflow to 0, skip reset
+        
+    li   LED_CUR, 1
+    slli LED_CUR, LED_CUR, 15
+        
+    skip_set:
+    sw   LED_CUR, 0(LEDS)               # Store current led to output
+
+    lw   t0, 0(SWITCHES)                # Load from switches port
+    and  t0, t0, LED_CUR                # Isolate the switch the port is at
+    snez t0, t0                         # If t0 is not 0, set it to 1 otherwise 0
+    
+
+    li   t2, 99
+    # Just for this assignment, if count is > 99 
+    beq  CNT_CUR, t2, reset_zero        # If count is 99 before add, reset to 0 
+    # otherwise, add to current count
+    add  CNT_CUR, CNT_CUR, t0           # Adds to current binary count
+    j    skip_reset_zero
+    reset_zero:
+    mv   CNT_CUR, zero                  # Reset to 0
+    skip_reset_zero:
+    
+    
+    ret
+
+
 
 # The following subroutine will convert the current binary count held in
 # CNT_CUR into a BCD value (up to 4 digits) and move it into CNT_DISP
@@ -129,53 +157,56 @@ dec_to_bcd:
     # thousands digit
     li   t2, 1000                       # Load thousands
     mv   t3, zero                       # bcd[3]
-thousands_loop:
-    blt  t1, t2, hundreds_start
-    sub  t1, t1, t2
-    addi t3, t3, 1
-    j    thousands_loop
-hundreds_start:
-    slli t3, t3, 12                     # move to top nibble
-    or   t0, t0, t3                     # or it into spot in output temp
 
-    li   t2, 100                        # Load hundreds
-    mv   t3, zero                       # bcd[2]
-hundreds_loop:
-    blt  t1, t2, tens_start
-    sub  t1, t1, t2
-    addi t3, t3, 1
-    j    hundreds_loop
-tens_start:
-    slli t3, t3, 8                      # Shift into place
-    or   t0, t0, t3                     # or it into output
 
-    # tens digit
-    li   t2, 10                         # Load tens
-    mv   t3, zero                       # bcd[1]
-tens_loop:
-    blt  t1, t2, units_start
-    sub  t1, t1, t2
-    addi t3, t3, 1
-    j    tens_loop
-units_start:
-    slli t3, t3, 4                      # move tens digit into place
-    or   t0, t0, t3                     # or it into output
+    thousands_loop:
+        blt  t1, t2, hundreds_start
+        sub  t1, t1, t2
+        addi t3, t3, 1
+        j    thousands_loop
+    hundreds_start:
+        slli t3, t3, 12                     # move to top nibble
+        or   t0, t0, t3                     # or it into spot in output temp
 
-    or   t0, t0, t1                     # 1s place needs nothing special
-    mv   CNT_DISP, t0                   # move it into output
+        li   t2, 100                        # Load hundreds
+        mv   t3, zero                       # bcd[2]
+    hundreds_loop:
+        blt  t1, t2, tens_start
+        sub  t1, t1, t2
+        addi t3, t3, 1
+        j    hundreds_loop
+    tens_start:
+        slli t3, t3, 8                      # Shift into place
+        or   t0, t0, t3                     # or it into output
+
+        # tens digit
+        li   t2, 10                         # Load tens
+        mv   t3, zero                       # bcd[1]
+    tens_loop:
+        blt  t1, t2, units_start
+        sub  t1, t1, t2
+        addi t3, t3, 1
+        j    tens_loop
+    units_start:
+        slli t3, t3, 4                      # move tens digit into place
+        or   t0, t0, t3                     # or it into output
+
+        or   t0, t0, t1                     # 1s place needs nothing special
+        mv   CNT_DISP, t0                   # move it into output
     ret
+
+
 
 
 
 delay: 
     li t0, 0x208D  # ~1ms debounce time?              
-
-loop: 
-    beq t0, zero, done_loop             # leave if done
-    addi t0, t0, -1                     # decrement count
-    j loop                              # rinse, repeat
-done_loop: 
-    ret                                 # leave it all behind
+    loop: 
+        beq t0, zero, done_loop             # leave if done
+        addi t0, t0, -1                     # decrement count
+        j loop                              # rinse, repeat
+    done_loop: 
+        ret                                 # leave it all behind
 
 
 # For this lab, the ISR will represent a multiplex cycle
@@ -183,6 +214,55 @@ done_loop:
 # segments, this will also do so, though be hard limited to only ever display
 # on the first two
 ISR:
+    addi sp, sp, -4
+    sw   t0, 0(sp)
+    
+    li   t0, 0xF
+    sw   t0, 0(ANODES)
 
+    bnez DISP_FLAG, skip_helper_reset   # 1 = hold blank
+                                        # 0 = do display next
 
+    
+    beqz AN_SHFT, setup_ones        # If anode shift is 0, we are displaying 1s
+                                    # Skip to ones setup
+
+    srl  t0, CNT_DISP, AN_SHFT      # Shift by an_shft amount
+    andi t0, t0, 0xF                # Isolate BCD nibble
+
+    beqz t0, skip_display           # If any other digit is 0, skip displaying it
+    bnez t0, do_display             # If the other digits are not 0, do_display (dont remask)
+
+    setup_ones:
+    
+    andi t0, CNT_DISP, 0xF
+    
+    do_display:
+
+    add  t0, t0, SSEG_LUT           # Add bcd val to address
+    lbu  t0, 0(t0)                  # Load from LUT
+
+    sw   t0, 0(SEGS)                # Write to segs port
+
+    xor  t0, AN_CUR, AN_SEL         # XOR Anode Selector bit with the current
+                                    # queued output to anodes
+    sw   t0, 0(ANODES)              
+
+    skip_display:
+    
+    srli AN_SEL, AN_SEL, 1          # Move to next digit to display
+    addi AN_SHFT, AN_SHFT, 4        # Next BCD to shift in
+
+    bnez AN_SEL, skip_helper_reset  # If ANODE SELECT hasn't gone to 0, dont need to reset 
+
+    li AN_SEL, 0x8
+    mv AN_SHFT, zero
+
+    skip_helper_reset:
+
+    xori DISP_FLAG, DISP_FLAG, 0x1   # Flip display flag for next interrupt
+
+    lw   t0, 0(sp)
+    addi sp, sp, 4
+    
     mret
